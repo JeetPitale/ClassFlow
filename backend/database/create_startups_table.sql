@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS startups (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    brief_description TEXT NOT NULL,
+    problem_statement TEXT,
+    solution_overview TEXT,
+    team_size INT DEFAULT 1,
+    target_market TEXT,
+    business_model TEXT,
+    funding_required DECIMAL(10, 2) DEFAULT 0,
+    current_stage VARCHAR(50),
+    tags TEXT,
+    attachments TEXT,
+    status ENUM('pending', 'reviewed', 'approved', 'rejected') DEFAULT 'pending',
+    admin_remarks TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);
