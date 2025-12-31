@@ -209,6 +209,11 @@ export default function TeacherAssignments() {
       return;
     }
 
+    if (formData.maxMarks <= 0) {
+      toast({ title: 'Error', description: 'Max marks must be greater than 0', variant: 'destructive' });
+      return;
+    }
+
     const data = new FormData();
     data.append('title', formData.title);
     data.append('description', formData.description);
@@ -378,7 +383,7 @@ export default function TeacherAssignments() {
               </div>
               <div className="space-y-2">
                 <Label>Max Marks</Label>
-                <Input type="number" value={formData.maxMarks} onChange={e => setFormData({ ...formData, maxMarks: parseInt(e.target.value) })} />
+                <Input type="number" min="1" value={formData.maxMarks} onChange={e => setFormData({ ...formData, maxMarks: parseInt(e.target.value) })} />
               </div>
               <div className="space-y-2">
                 <Label>Semester</Label>
@@ -547,8 +552,28 @@ function StudentGradeCard({ student, submission, assignment, onGrade }) {
   };
 
   const handleSave = async () => {
-    const marks = document.getElementById(`marks-${student.id}`).value;
+    const marksInput = document.getElementById(`marks-${student.id}`);
     const feedback = document.getElementById(`feedback-${student.id}`).value;
+    const marks = marksInput.value;
+
+    const parsedMarks = parseFloat(marks);
+    const maxMarks = assignment?.total_marks || 100;
+
+    if (isNaN(parsedMarks)) {
+      toast({ title: "Error", description: "Please enter valid marks", variant: "destructive" });
+      return;
+    }
+
+    if (parsedMarks < 0) {
+      toast({ title: "Error", description: "Marks cannot be negative", variant: "destructive" });
+      return;
+    }
+
+    if (parsedMarks > maxMarks) {
+      toast({ title: "Error", description: `Marks cannot exceed ${maxMarks}`, variant: "destructive" });
+      return;
+    }
+
     await onGrade(student.id, marks, feedback);
     // Auto-collapse after save
     setExpanded(false);
@@ -600,6 +625,7 @@ function StudentGradeCard({ student, submission, assignment, onGrade }) {
               <Input
                 id={`marks-${student.id}`}
                 type="number"
+                min="0"
                 defaultValue={submission?.marks_obtained ?? ''}
                 max={assignment?.total_marks || 100}
                 placeholder="0"

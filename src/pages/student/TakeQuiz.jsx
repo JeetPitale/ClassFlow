@@ -76,8 +76,24 @@ export default function TakeQuiz() {
                 setQuiz(fullQuiz);
 
                 // Initialize timer if duration exists
+                // Initialize timer if duration exists
                 if (fullQuiz.duration && !isNaN(fullQuiz.duration)) {
-                    setTimeLeft(fullQuiz.duration * 60);
+                    const storageKey = `quiz_timer_${quizId}_${user?.email}`;
+                    const savedEndTime = localStorage.getItem(storageKey);
+                    
+                    if (savedEndTime) {
+                        const remainingSeconds = Math.floor((parseInt(savedEndTime) - Date.now()) / 1000);
+                        if (remainingSeconds > 0) {
+                            setTimeLeft(remainingSeconds);
+                        } else {
+                            setTimeLeft(0);
+                        }
+                    } else {
+                        const durationInSeconds = fullQuiz.duration * 60;
+                        const targetEndTime = Date.now() + durationInSeconds * 1000;
+                        localStorage.setItem(storageKey, targetEndTime.toString());
+                        setTimeLeft(durationInSeconds);
+                    }
                 } else {
                     setTimeLeft(0); // Fallback if no duration
                 }
@@ -147,6 +163,9 @@ export default function TakeQuiz() {
     const handleSubmit = async (autoSubmit = false) => {
         setIsSubmitting(true);
         setShowConfirmSubmit(false);
+
+        // Clear timer storage
+        localStorage.removeItem(`quiz_timer_${quizId}_${user?.email}`);
 
         try {
             const score = calculateScore();

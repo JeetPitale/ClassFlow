@@ -142,7 +142,8 @@ export default function TeacherQuizzes() {
           ...q,
           duration: q.duration_minutes || 0,
           maxMarks: q.total_marks || 0,
-          semester: q.semester || '1'
+          semester: q.semester || '1',
+          createdAt: q.created_at // Map backend created_at to frontend createdAt
         }));
         setQuizzes(mappedQuizzes);
       }
@@ -177,6 +178,16 @@ export default function TeacherQuizzes() {
   const handleQuizSubmit = async () => {
     if (!quizFormData.title) {
       toast({ title: 'Error', description: 'Please enter a title', variant: 'destructive' });
+      return;
+    }
+
+    if (quizFormData.duration <= 0) {
+      toast({ title: 'Error', description: 'Duration must be greater than 0', variant: 'destructive' });
+      return;
+    }
+
+    if (quizFormData.maxMarks <= 0) {
+      toast({ title: 'Error', description: 'Max marks must be greater than 0', variant: 'destructive' });
       return;
     }
 
@@ -239,6 +250,11 @@ export default function TeacherQuizzes() {
   const handleAddQuestion = async () => {
     if (!selectedQuiz || !questionFormData.question || questionFormData.options.some((o) => !o.trim())) {
       toast({ title: 'Error', description: 'Please fill all fields', variant: 'destructive' });
+      return;
+    }
+
+    if (questionFormData.marks <= 0) {
+      toast({ title: 'Error', description: 'Marks must be positive', variant: 'destructive' });
       return;
     }
 
@@ -386,6 +402,10 @@ export default function TeacherQuizzes() {
 
   // New: Save an individual question from the list
   const handleSaveQuestion = async (question) => {
+    if (question.marks <= 0) {
+      toast({ title: 'Error', description: 'Marks must be positive', variant: 'destructive' });
+      return;
+    }
     try {
       const url = `http://localhost:8000/api/quizzes/${selectedQuiz.id}/questions/${question.id}`;
       const body = JSON.stringify({
@@ -832,6 +852,7 @@ export default function TeacherQuizzes() {
                 <Input
                   id="duration"
                   type="number"
+                  min="1"
                   value={quizFormData.duration}
                   onChange={(e) => setQuizFormData({ ...quizFormData, duration: parseInt(e.target.value) })} />
 
@@ -841,6 +862,7 @@ export default function TeacherQuizzes() {
                 <Input
                   id="maxMarks"
                   type="number"
+                  min="1"
                   value={quizFormData.maxMarks}
                   onChange={(e) => setQuizFormData({ ...quizFormData, maxMarks: parseInt(e.target.value) })} />
 
@@ -931,6 +953,7 @@ export default function TeacherQuizzes() {
                           <Label className="text-xs whitespace-nowrap">Marks</Label>
                           <Input
                             type="number"
+                            min="1"
                             value={q.marks}
                             onChange={(e) => handleLocalQuestionChange(q.id, 'marks', parseInt(e.target.value) || 0)}
                             className="h-8"
@@ -1003,6 +1026,7 @@ export default function TeacherQuizzes() {
                 <Label>Marks</Label>
                 <Input
                   type="number"
+                  min="1"
                   value={questionFormData.marks}
                   onChange={(e) => setQuestionFormData({ ...questionFormData, marks: parseInt(e.target.value) })} />
 
