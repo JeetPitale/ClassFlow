@@ -13,7 +13,19 @@ export function AuthProvider({ children }) {
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate initial auth check delay
+  useEffect(() => {
+    const initAuth = async () => {
+      // Here you could verify token validity with backend if needed
+      // For now, we trust localStorage but show loader for better UX
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1500); // 1.5s minimum splash screen time
+    };
+    initAuth();
+  }, []);
 
   // Persist user to localStorage whenever it changes
   useEffect(() => {
@@ -22,6 +34,7 @@ export function AuthProvider({ children }) {
     } else {
       localStorage.removeItem(USER_STORAGE_KEY);
       localStorage.removeItem(TOKEN_STORAGE_KEY);
+      // Don't modify isLoading here to avoid re-triggering preloader on logout
     }
   }, [user]);
 
@@ -70,7 +83,7 @@ export function AuthProvider({ children }) {
       value={{
         user,
         isAuthenticated: !!user,
-        isLoading,
+        loading: isLoading,
         login,
         logout,
         switchRole,
