@@ -68,7 +68,7 @@ const AdminProfile = () => {
         if (!path) return null;
         if (path.startsWith('data:')) return path; // Base64
         if (path.startsWith('http')) return path; // Full URL
-        return `http://localhost:8000${path}`; // Append backend base URL
+        return `https://classflow-backend-jeet.azurewebsites.net${path}`; // Append backend base URL
     };
 
     const [profileImage, setProfileImage] = useState(getImageUrl(user?.profile_photo));

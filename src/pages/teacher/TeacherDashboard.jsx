@@ -25,7 +25,7 @@ export default function TeacherDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/dashboard/teacher-stats', {
+        const response = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/dashboard/teacher-stats', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

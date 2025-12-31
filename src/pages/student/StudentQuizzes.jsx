@@ -25,13 +25,13 @@ export default function StudentQuizzes() {
     const fetchData = async () => {
         try {
             // Fetch Quizzes
-            const quizzesRes = await fetch('http://localhost:8000/api/quizzes', {
+            const quizzesRes = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/quizzes', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const quizzesData = await quizzesRes.json();
 
             // Fetch My Attempts
-            const attemptsRes = await fetch('http://localhost:8000/api/student/quiz-attempts', {
+            const attemptsRes = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/student/quiz-attempts', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const attemptsData = await attemptsRes.json();

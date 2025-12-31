@@ -91,7 +91,7 @@ export default function TeacherMaterials() {
 
   const fetchMaterials = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/materials', {
+      const response = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/materials', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -160,7 +160,7 @@ export default function TeacherMaterials() {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/materials', {
+      const response = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/materials', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -189,7 +189,7 @@ export default function TeacherMaterials() {
     if (!materialToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/api/materials/${materialToDelete}`, {
+      const response = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/materials/${materialToDelete}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -43,7 +43,7 @@ export default function TeacherSyllabus() {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/syllabus', {
+      const response = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/syllabus', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -63,7 +63,7 @@ export default function TeacherSyllabus() {
 
   const toggleComplete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/syllabus/topics/${id}/toggle`, {
+      const response = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/syllabus/topics/${id}/toggle`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -81,7 +81,7 @@ export default function TeacherSyllabus() {
 
   const toggleSubtopicComplete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/syllabus/subtopics/${id}/toggle`, {
+      const response = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/syllabus/subtopics/${id}/toggle`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -117,8 +117,8 @@ export default function TeacherSyllabus() {
 
     try {
       const url = editingTopic
-        ? `http://localhost:8000/api/syllabus/topics/${editingTopic.id}`
-        : 'http://localhost:8000/api/syllabus/topics';
+        ? `https://classflow-backend-jeet.azurewebsites.net/api/syllabus/topics/${editingTopic.id}`
+        : 'https://classflow-backend-jeet.azurewebsites.net/api/syllabus/topics';
       const method = editingTopic ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -151,7 +151,7 @@ export default function TeacherSyllabus() {
   const deleteTopic = async () => {
     if (!deletingTopicId) return;
     try {
-      const response = await fetch(`http://localhost:8000/api/syllabus/topics/${deletingTopicId}`, {
+      const response = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/syllabus/topics/${deletingTopicId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -188,8 +188,8 @@ export default function TeacherSyllabus() {
 
     try {
       const url = editingSubtopic
-        ? `http://localhost:8000/api/syllabus/subtopics/${editingSubtopic.id}`
-        : 'http://localhost:8000/api/syllabus/subtopics';
+        ? `https://classflow-backend-jeet.azurewebsites.net/api/syllabus/subtopics/${editingSubtopic.id}`
+        : 'https://classflow-backend-jeet.azurewebsites.net/api/syllabus/subtopics';
       const method = editingSubtopic ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -223,7 +223,7 @@ export default function TeacherSyllabus() {
     if (!deletingSubtopicId) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/api/syllabus/subtopics/${deletingSubtopicId}`, {
+      const response = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/syllabus/subtopics/${deletingSubtopicId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

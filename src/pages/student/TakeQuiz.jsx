@@ -40,7 +40,7 @@ export default function TakeQuiz() {
 
             try {
                 // 1. Fetch Quiz Details
-                const quizRes = await fetch(`http://localhost:8000/api/quizzes/${quizId}`, {
+                const quizRes = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${quizId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const quizData = await quizRes.json();
@@ -50,7 +50,7 @@ export default function TakeQuiz() {
                 }
 
                 // 2. Fetch Questions
-                const questionsRes = await fetch(`http://localhost:8000/api/quizzes/${quizId}/questions`, {
+                const questionsRes = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${quizId}/questions`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const questionsData = await questionsRes.json();
@@ -80,7 +80,7 @@ export default function TakeQuiz() {
                 if (fullQuiz.duration && !isNaN(fullQuiz.duration)) {
                     const storageKey = `quiz_timer_${quizId}_${user?.email}`;
                     const savedEndTime = localStorage.getItem(storageKey);
-                    
+
                     if (savedEndTime) {
                         const remainingSeconds = Math.floor((parseInt(savedEndTime) - Date.now()) / 1000);
                         if (remainingSeconds > 0) {
@@ -170,7 +170,7 @@ export default function TakeQuiz() {
         try {
             const score = calculateScore();
 
-            const response = await fetch(`http://localhost:8000/api/quizzes/${quizId}/attempt`, {
+            const response = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${quizId}/attempt`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

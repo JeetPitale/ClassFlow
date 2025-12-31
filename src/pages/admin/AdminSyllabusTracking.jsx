@@ -31,7 +31,7 @@ export default function AdminSyllabusTracking() {
     const fetchProgress = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:8000/api/admin/syllabus-progress', {
+            const response = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/admin/syllabus-progress', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -55,7 +55,7 @@ export default function AdminSyllabusTracking() {
         setDetailsOpen(true);
         setDetailsLoading(true);
         try {
-            const response = await fetch(`http://localhost:8000/api/admin/syllabus/${teacher.id}`, {
+            const response = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/admin/syllabus/${teacher.id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();

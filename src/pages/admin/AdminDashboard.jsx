@@ -23,7 +23,7 @@ export default function AdminDashboard() {
         const token = localStorage.getItem('classflow_token');
         if (!token) return;
 
-        const response = await fetch('http://localhost:8000/api/dashboard/stats', {
+        const response = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/dashboard/stats', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

@@ -57,7 +57,7 @@ export default function StudentStartup() {
       const token = localStorage.getItem('classflow_token');
       if (!token) return;
 
-      const response = await fetch('http://localhost:8000/api/startups', {
+      const response = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/startups', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -128,7 +128,7 @@ export default function StudentStartup() {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/startups', {
+      const response = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/startups', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
