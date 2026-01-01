@@ -102,7 +102,7 @@ The backend uses **Environment Variables** for database connection.
 | `DB_PORT` | Database Port | `****` |
 | `DB_NAME` | Database Name | `classflow_db` |
 | `DB_USER` | Database User | `******` |
-| `DB_PASS` | Database Password | '****' |
+| `DB_PASS` | Database Password | `******` |
 | `DB_SSL` | Enable SSL (set to `true`) | `*****` |
 | `DB_SSL_CA` | Path to SSL CA Certificate | `****` |
 
