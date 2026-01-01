@@ -98,13 +98,13 @@ The backend uses **Environment Variables** for database connection.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DB_HOST` | Database Hostname | `127.0.0.1` |
-| `DB_PORT` | Database Port | `3306` |
+| `DB_HOST` | Database Hostname | `******` |
+| `DB_PORT` | Database Port | `****` |
 | `DB_NAME` | Database Name | `classflow_db` |
-| `DB_USER` | Database User | `root` |
-| `DB_PASS` | Database Password | *(empty)* |
-| `DB_SSL` | Enable SSL (set to `true`) | `false` |
-| `DB_SSL_CA` | Path to SSL CA Certificate | `null` |
+| `DB_USER` | Database User | `******` |
+| `DB_PASS` | Database Password | '****' |
+| `DB_SSL` | Enable SSL (set to `true`) | `*****` |
+| `DB_SSL_CA` | Path to SSL CA Certificate | `****` |
 
 **Note**: For production environments appropriately set `DB_SSL=true`.
 
