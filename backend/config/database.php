@@ -41,7 +41,10 @@ class Database
 
             // Check if we are connecting to Azure (simple heuristic or explicit env var)
             if (strpos($db_host, 'azure.com') !== false || getenv('DB_SSL') === 'true') {
-                $options[PDO::MYSQL_ATTR_SSL_CA] = '/path/to/available/ca-cert.pem'; // Placeholder, usually needed
+                $item_ssl_ca = getenv('DB_SSL_CA');
+                if ($item_ssl_ca) {
+                    $options[PDO::MYSQL_ATTR_SSL_CA] = $item_ssl_ca;
+                }
                 $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false; // Disable verification for dev/easier setup if cert not present
             }
 
