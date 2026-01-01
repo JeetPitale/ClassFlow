@@ -104,6 +104,11 @@ class TeacherController
         $teacher->qualification = isset($data->qualification) ? $data->qualification : $existingTeacher['qualification'];
         $teacher->experience_years = isset($data->experience_years) ? $data->experience_years : $existingTeacher['experience_years'];
 
+        // Handle password update
+        if (isset($data->password) && !empty($data->password)) {
+            $teacher->password_hash = $data->password;
+        }
+
         if ($teacher->update()) {
             $updatedTeacher = $teacher->findById($id);
             Response::success($updatedTeacher, 'Teacher updated successfully');

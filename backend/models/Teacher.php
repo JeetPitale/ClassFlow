@@ -122,12 +122,18 @@ class Teacher
      */
     public function update()
     {
+        $password_set = !empty($this->password_hash);
+        if ($password_set) {
+            $this->password_hash = password_hash($this->password_hash, PASSWORD_BCRYPT);
+        }
+
         $query = "UPDATE " . $this->table_name . "
                   SET name = :name, email = :email, phone = :phone, dob = :dob,
                       gender = :gender, address = :address,
                       subject_specialization = :subject_specialization,
                       qualification = :qualification,
-                      experience_years = :experience_years
+                      experience_years = :experience_years" .
+            ($password_set ? ", password_hash = :password_hash" : "") . "
                   WHERE id = :id";
 
         $stmt = $this->conn->prepare($query);
@@ -143,6 +149,10 @@ class Teacher
         $stmt->bindParam(":subject_specialization", $this->subject_specialization);
         $stmt->bindParam(":qualification", $this->qualification);
         $stmt->bindParam(":experience_years", $this->experience_years);
+
+        if ($password_set) {
+            $stmt->bindParam(":password_hash", $this->password_hash);
+        }
 
         return $stmt->execute();
     }

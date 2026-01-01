@@ -109,6 +109,11 @@ class StudentController
         $student->semester = isset($data->semester) ? $data->semester : $existingStudent['semester'];
         $student->department = isset($data->department) ? $data->department : $existingStudent['department'];
 
+        // Handle password update
+        if (isset($data->password) && !empty($data->password)) {
+            $student->password_hash = $data->password;
+        }
+
         if ($student->update()) {
             $updatedStudent = $student->findById($id);
             Response::success($updatedStudent, 'Student updated successfully');

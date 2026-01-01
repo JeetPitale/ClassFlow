@@ -136,10 +136,16 @@ class Student
      */
     public function update()
     {
+        $password_set = !empty($this->password_hash);
+        if ($password_set) {
+            $this->password_hash = password_hash($this->password_hash, PASSWORD_BCRYPT);
+        }
+
         $query = "UPDATE " . $this->table_name . "
                   SET name = :name, email = :email, phone = :phone, dob = :dob, 
                       gender = :gender, address = :address, enrollment_no = :enrollment_no,
-                      semester = :semester, department = :department
+                      semester = :semester, department = :department" .
+            ($password_set ? ", password_hash = :password_hash" : "") . "
                   WHERE id = :id";
 
         $stmt = $this->conn->prepare($query);
@@ -156,8 +162,13 @@ class Student
         $stmt->bindParam(":semester", $this->semester);
         $stmt->bindParam(":department", $this->department);
 
+        if ($password_set) {
+            $stmt->bindParam(":password_hash", $this->password_hash);
+        }
+
         return $stmt->execute();
     }
+
 
     /**
      * Delete student
