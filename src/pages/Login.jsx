@@ -105,15 +105,15 @@ export default function Login() {
 
           <div className="grid grid-cols-3 gap-4 text-primary-foreground/80">
             <div>
-              <p className="text-3xl font-bold text-primary-foreground">500+</p>
+              <p className="text-3xl font-bold text-primary-foreground">200+</p>
               <p className="text-sm">Students</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-primary-foreground">50+</p>
+              <p className="text-3xl font-bold text-primary-foreground">5+</p>
               <p className="text-sm">Teachers</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-primary-foreground">100+</p>
+              <p className="text-3xl font-bold text-primary-foreground">10+</p>
               <p className="text-sm">Courses</p>
             </div>
           </div>
@@ -212,7 +212,7 @@ export default function Login() {
                 <button
                   type="button"
                   className="text-sm text-primary hover:underline"
-                  onClick={() => toast.info('Password reset will be available after connecting to backend')}>
+                  onClick={() => toast.info('To Reset Password Contact Jeet Pitale')}>
 
                   Forgot password?
                 </button>
@@ -239,7 +239,7 @@ export default function Login() {
       {/* Footer */}
       <footer className="border-t bg-background px-6 py-4">
         <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-2 text-sm text-foreground font-semibold max-w-7xl mx-auto">
-          <p>© {new Date().getFullYear()} ClassFlow. All rights reserved.</p>
+          <p>© 2025 ClassFlow. All rights reserved.</p>
           <p>Developed by Jeet Pitale & Mustafa Khericha</p>
         </div>
       </footer>
