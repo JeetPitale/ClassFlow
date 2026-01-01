@@ -31,7 +31,7 @@ export function DashboardLayout({ requiredRole }) {
         </main>
         <footer className="border-t bg-background px-6 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-foreground font-semibold">
-            <p>© {new Date().getFullYear()} ClassFlow. All rights reserved.</p>
+            <p>© 2025 ClassFlow. All rights reserved.</p>
             <p>Developed by Jeet Pitale & Mustafa Khericha</p>
           </div>
         </footer>
