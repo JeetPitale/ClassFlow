@@ -1,5 +1,12 @@
 # ClassFlow - Learning Management System (LMS)
 
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=Vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white)
+![Azure](https://img.shields.io/badge/Azure-007FFF?style=for-the-badge&logo=microsoft-azure&logoColor=white)
+
 ClassFlow is a comprehensive Learning Management System designed to streamline educational processes for administrators, teachers, and students. Built with a modern tech stack, it offers a robust platform for managing courses, quizzes, schedules, and more.
 
 ## Features
@@ -11,7 +18,7 @@ ClassFlow is a comprehensive Learning Management System designed to streamline e
 - **Progress Tracking**: Monitor grades and performance.
 
 ### 👨‍🏫 For Teachers
-- **Course Management**: specialized tools for managing assigned courses.
+- **Course Management**: customized tools for managing assigned courses.
 - **Syllabus**: Upload and organize course syllabus.
 - **Quiz Creator**: Create and manage quizzes for students.
 - **Grading**: Review student submissions and assign grades.
@@ -44,7 +51,7 @@ Before running the project, ensure you have the following installed:
 - [Node.js](https://nodejs.org/) (v16 or higher)
 - [PHP](https://www.php.net/) (v8.0 or higher)
 - [MySQL](https://www.mysql.com/)
-- [Composer](https://getcomposer.org/) (Optional, if using external PHP packages)
+- [Composer](https://getcomposer.org/) (Optional)
 
 ## Installation & Setup
 
@@ -61,18 +68,17 @@ cd ClassFlow
     ```
 2.  Set up the database:
     - Create a new MySQL database named `classflow_db`.
-    - Import the database schema (look for `.sql` files in `migrations` or root, or use the provided setup scripts).
+    - Import the database schema (look for `.sql` files in `migrations` or root).
 3.  Configure the database connection:
-    - Open `backend/config/database.php`.
-    - Update the credentials if necessary (Default: `root` user, empty password, `127.0.0.1` host).
-    - Alternatively, set environment variables (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`).
-4.  Start the PHP development server (or use XAMPP/MAMP):
+    - Open `backend/config/database.php` or create a `.env` file.
+    - Update the credentials (see [Configuration](#configuration)).
+4.  Start the PHP development server:
     ```bash
     php -S localhost:8000
     ```
 
 ### 3. Frontend Setup
-1.  Navigate to the project root (if not already there).
+1.  Navigate to the project root.
     ```bash
     cd ..
     ```
@@ -88,7 +94,7 @@ cd ClassFlow
 ## Configuration
 
 ### Backend Configuration
-The backend uses **Environment Variables** for database connection. You can set these in your server environment or by creating a `.env` file (if supported) or modifying `backend/config/database.php` directly.
+The backend uses **Environment Variables** for database connection.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -100,20 +106,20 @@ The backend uses **Environment Variables** for database connection. You can set 
 | `DB_SSL` | Enable SSL (set to `true`) | `false` |
 | `DB_SSL_CA` | Path to SSL CA Certificate | `null` |
 
-**Note for Azure/Production**: Validates `azure.com` in the host or `DB_SSL=true` to enforce SSL connections.
+**Note**: For production environments appropriately set `DB_SSL=true`.
 
 ### Frontend Configuration
 The frontend communicates with the backend via the API URL defined in `src/services/api.js`.
 
-To change the API endpoint (e.g., for local development vs. production):
+To change the API endpoint:
 1.  Open `src/services/api.js`.
 2.  Update the `API_URL` constant:
     ```javascript
     // For Local Development
     const API_URL = 'http://localhost:8000/api';
 
-    // For Production (current default)
-    // const API_URL = 'https://classflow-backend-jeet.azurewebsites.net/api';
+    // For Production
+    // const API_URL = 'https://<your-backend-domain>/api';
     ```
 
 ## Folder Structure
@@ -130,7 +136,8 @@ ClassFlow/
 │   ├── components/     # Reusable UI components
 │   ├── pages/          # Application views (Student, Teacher, Admin)
 │   ├── services/       # API Service definitions (api.js)
-│   └── context/        # React Context (Auth)
+│   ├── context/        # React Context (Auth)
+│   └── lib/            # Utilities
 └── ...
 ```
 
