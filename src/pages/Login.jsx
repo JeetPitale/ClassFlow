@@ -240,7 +240,7 @@ export default function Login() {
       <footer className="border-t bg-background px-6 py-4">
         <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-2 text-sm text-foreground font-semibold max-w-7xl mx-auto">
           <p>© 2025 ClassFlow. All rights reserved.</p>
-          <p>Developed by Jeet Pitale & Mustafa Khericha</p>
+          <p>Mustafa Khericha & Developed by Jeet Pitale </p>
         </div>
       </footer>
     </div>);
