@@ -38,6 +38,7 @@ import {
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { materialAPI } from '@/services/api';
 
 const typeIcons = {
   pdf: FileText,
@@ -148,8 +149,6 @@ export default function TeacherMaterials() {
       formDataToSend.append('title', formData.title);
       formDataToSend.append('description', formData.description);
       formDataToSend.append('semester', formData.semester);
-
-      import { materialAPI } from '@/services/api';
 
       // ... (inside handleSubmit)
 

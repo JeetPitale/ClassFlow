@@ -906,70 +906,78 @@ export default function TeacherQuizzes() {
                 </div>
 
                 <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                  {selectedQuiz.questions.map((q, i) =>
-                    <div key={q.id} className="border border-border p-4 rounded-lg space-y-4 bg-card/50">
+                  {selectedQuiz.questions.map((q, i) => {
+                    const isOwner = user && (user.role === 'admin' || String(user.id) === String(selectedQuiz.created_by_teacher_id));
+                    return (
+                      <div key={q.id} className="border border-border p-4 rounded-lg space-y-4 bg-card/50">
 
-                      {/* Question Header & Actions */}
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 space-y-2">
-                          <Label className="text-xs text-muted-foreground">Question {i + 1}</Label>
-                          <Textarea
-                            value={q.question}
-                            onChange={(e) => handleLocalQuestionChange(q.id, 'question', e.target.value)}
-                            className="min-h-[60px]"
-                          />
+                        {/* Question Header & Actions */}
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-2">
+                            <Label className="text-xs text-muted-foreground">Question {i + 1}</Label>
+                            <Textarea
+                              value={q.question}
+                              onChange={(e) => handleLocalQuestionChange(q.id, 'question', e.target.value)}
+                              className="min-h-[60px]"
+                              disabled={!isOwner}
+                            />
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:bg-destructive/10 -mt-1"
+                            onClick={() => handleDeleteQuestion(q.id)}
+                            disabled={!isOwner}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:bg-destructive/10 -mt-1"
-                          onClick={() => handleDeleteQuestion(q.id)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
 
-                      {/* Options */}
-                      <div className="space-y-2">
-                        <Label className="text-xs text-muted-foreground">Options (Select correct answer)</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {q.options.map((opt, optIndex) => (
-                            <div key={optIndex} className="flex items-center gap-2">
-                              <input
-                                type="radio"
-                                name={`correctAnswer-${q.id}`}
-                                checked={parseInt(q.correctAnswer) === optIndex}
-                                onChange={() => handleLocalQuestionChange(q.id, 'correctAnswer', optIndex)}
-                                className="w-4 h-4 accent-primary flex-shrink-0"
-                              />
-                              <Input
-                                value={opt}
-                                onChange={(e) => handleLocalQuestionChange(q.id, 'options', e.target.value, optIndex)}
-                                className="h-9"
-                              />
-                            </div>
-                          ))}
+                        {/* Options */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Options (Select correct answer)</Label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {q.options.map((opt, optIndex) => (
+                              <div key={optIndex} className="flex items-center gap-2">
+                                <input
+                                  type="radio"
+                                  name={`correctAnswer-${q.id}`}
+                                  checked={parseInt(q.correctAnswer) === optIndex}
+                                  onChange={() => handleLocalQuestionChange(q.id, 'correctAnswer', optIndex)}
+                                  className="w-4 h-4 accent-primary flex-shrink-0"
+                                  disabled={!isOwner}
+                                />
+                                <Input
+                                  value={opt}
+                                  onChange={(e) => handleLocalQuestionChange(q.id, 'options', e.target.value, optIndex)}
+                                  className="h-9"
+                                  disabled={!isOwner}
+                                />
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Footer: Marks & Save */}
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center gap-2 w-32">
-                          <Label className="text-xs whitespace-nowrap">Marks</Label>
-                          <Input
-                            type="number"
-                            min="1"
-                            value={q.marks}
-                            onChange={(e) => handleLocalQuestionChange(q.id, 'marks', parseInt(e.target.value) || 0)}
-                            className="h-8"
-                          />
+                        {/* Footer: Marks & Save */}
+                        <div className="flex items-center justify-between pt-2">
+                          <div className="flex items-center gap-2 w-32">
+                            <Label className="text-xs whitespace-nowrap">Marks</Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={q.marks}
+                              onChange={(e) => handleLocalQuestionChange(q.id, 'marks', parseInt(e.target.value) || 0)}
+                              className="h-8"
+                              disabled={!isOwner}
+                            />
+                          </div>
+                          <Button size="sm" onClick={() => handleSaveQuestion(q)} className="gap-2" disabled={!isOwner}>
+                            <CheckCircle className="w-3 h-3" />
+                            Save Changes
+                          </Button>
                         </div>
-                        <Button size="sm" onClick={() => handleSaveQuestion(q)} className="gap-2">
-                          <CheckCircle className="w-3 h-3" />
-                          Save Changes
-                        </Button>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
               </div>
             }
@@ -983,7 +991,11 @@ export default function TeacherQuizzes() {
                 onChange={handleFileUpload}
                 className="hidden" />
 
-              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!(user && selectedQuiz && (user.role === 'admin' || String(user.id) === String(selectedQuiz.created_by_teacher_id)))}
+              >
                 <Upload className="w-4 h-4 mr-2" />
                 Upload Questions
               </Button>
@@ -1001,7 +1013,9 @@ export default function TeacherQuizzes() {
                   value={questionFormData.question}
                   onChange={(e) => setQuestionFormData({ ...questionFormData, question: e.target.value })}
                   placeholder="Enter your question"
-                  rows={2} />
+                  rows={2}
+                  disabled={!(user && selectedQuiz && (user.role === 'admin' || String(user.id) === String(selectedQuiz.created_by_teacher_id)))}
+                />
 
               </div>
               <div className="space-y-2">
@@ -1012,14 +1026,18 @@ export default function TeacherQuizzes() {
                       <Input
                         value={option}
                         onChange={(e) => updateOptionValue(i, e.target.value)}
-                        placeholder={`Option ${i + 1}`} />
+                        placeholder={`Option ${i + 1}`}
+                        disabled={!(user && selectedQuiz && (user.role === 'admin' || String(user.id) === String(selectedQuiz.created_by_teacher_id)))}
+                      />
 
                       <input
                         type="radio"
                         name="correctAnswer"
                         checked={parseInt(questionFormData.correctAnswer) === i}
                         onChange={() => setQuestionFormData({ ...questionFormData, correctAnswer: i })}
-                        className="w-4 h-4 accent-primary" />
+                        className="w-4 h-4 accent-primary"
+                        disabled={!(user && selectedQuiz && (user.role === 'admin' || String(user.id) === String(selectedQuiz.created_by_teacher_id)))}
+                      />
 
                     </div>
                   )}
@@ -1032,11 +1050,16 @@ export default function TeacherQuizzes() {
                   type="number"
                   min="1"
                   value={questionFormData.marks}
-                  onChange={(e) => setQuestionFormData({ ...questionFormData, marks: parseInt(e.target.value) })} />
+                  onChange={(e) => setQuestionFormData({ ...questionFormData, marks: parseInt(e.target.value) })}
+                  disabled={!(user && selectedQuiz && (user.role === 'admin' || String(user.id) === String(selectedQuiz.created_by_teacher_id)))}
+                />
 
               </div>
               <div className="flex gap-2">
-                <Button onClick={handleAddQuestion}>
+                <Button
+                  onClick={handleAddQuestion}
+                  disabled={!(user && selectedQuiz && (user.role === 'admin' || String(user.id) === String(selectedQuiz.created_by_teacher_id)))}
+                >
                   <Plus className="w-4 h-4 mr-1" />
                   Add Question
                 </Button>

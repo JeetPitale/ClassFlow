@@ -8,28 +8,34 @@ class AssignmentController
     public static function index()
     {
         $headers = getallheaders();
-        $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
+        $authHeader = $headers['Authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        $token = str_replace('Bearer ', '', $authHeader);
         $decoded = JWTHandler::validateToken($token);
+
+        if (!$decoded) {
+            Response::unauthorized('Invalid or missing authentication token');
+        }
 
         $assignment = new Assignment();
         $assignments = [];
 
-        if ($decoded && $decoded['role'] === 'student') {
+        if ($decoded['role'] === 'student') {
             // Get Student details to check semester
             require_once __DIR__ . '/../models/Student.php';
             $studentModel = new Student();
             $student = $studentModel->findById($decoded['user_id']);
 
             if ($student) {
-                // Assuming Assignment model has getBySemester method
                 $assignments = $assignment->getBySemester($student['semester']);
             }
-        } elseif ($decoded && $decoded['role'] === 'teacher') {
-            // Teachers see only their own assignments
+        } elseif ($decoded['role'] === 'teacher') {
+            // Teachers see ONLY their own assignments
             $assignments = $assignment->getByTeacher($decoded['user_id']);
-        } else {
+        } elseif ($decoded['role'] === 'admin') {
             // Admins see all
             $assignments = $assignment->getAll();
+        } else {
+            Response::forbidden('Access denied');
         }
 
         Response::success($assignments);
