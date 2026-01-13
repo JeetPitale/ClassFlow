@@ -115,6 +115,13 @@ export default function TeacherAssignments() {
 
   const handleOpenCreate = () => {
     resetForm();
+    // Default to tomorrow at same time
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Format for datetime-local: YYYY-MM-DDThh:mm
+    const dateString = tomorrow.toISOString().slice(0, 16);
+
+    setFormData(prev => ({ ...prev, dueDate: dateString }));
     setIsDialogOpen(true);
   };
 
@@ -204,8 +211,13 @@ export default function TeacherAssignments() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.title || !formData.dueDate) {
-      toast({ title: 'Error', description: 'Please fill in required fields', variant: 'destructive' });
+    if (!formData.title) {
+      toast({ title: 'Error', description: 'Please enter an assignment title', variant: 'destructive' });
+      return;
+    }
+
+    if (!formData.dueDate) {
+      toast({ title: 'Error', description: 'Please select a valid due date and time', variant: 'destructive' });
       return;
     }
 
