@@ -222,63 +222,71 @@ export default function TeacherMaterials() {
         {materials.length === 0 && !loading ? (
           <p className="text-muted-foreground col-span-full">No materials found.</p>
         ) : (
-          materials.map((material, index) => {
-            const Icon = typeIcons[material.file_type] || FileText;
+          materials
+            .filter(material => {
+              // Frontend Strict Isolation
+              if (!token) return false;
+              const userData = JSON.parse(atob(token.split('.')[1]));
+              if (userData.role === 'admin') return true;
+              return String(material.uploaded_by_teacher_id) === String(userData.user_id);
+            })
+            .map((material, index) => {
+              const Icon = typeIcons[material.file_type] || FileText;
 
-            return (
-              <div
-                key={material.id}
-                className="card-elevated p-5 animate-slide-up"
-                style={{ animationDelay: `${index * 50}ms` }}>
+              return (
+                <div
+                  key={material.id}
+                  className="card-elevated p-5 animate-slide-up"
+                  style={{ animationDelay: `${index * 50}ms` }}>
 
-                <div className="flex items-start gap-4">
-                  <div className={`hidden sm:block p-2.5 rounded-lg ${typeColors[material.file_type] || 'bg-gray-100'}`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-medium text-foreground truncate max-w-[70%]">{material.title}</h4>
-                      <Badge variant="outline" className="text-xs">
-                        Sem {material.semester}
-                      </Badge>
+                  <div className="flex items-start gap-4">
+                    <div className={`hidden sm:block p-2.5 rounded-lg ${typeColors[material.file_type] || 'bg-gray-100'}`}>
+                      <Icon className="w-5 h-5" />
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                      {material.description}
-                    </p>
-                    <div className="flex items-center gap-2 mt-3">
-                      <Badge variant="secondary" className={typeColors[material.file_type] || 'bg-gray-100'}>
-                        {(material.file_type || 'Unknown').toUpperCase()}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {material.created_at ? format(new Date(material.created_at), 'MMM d, yyyy') : ''}
-                      </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-medium text-foreground truncate max-w-[70%]">{material.title}</h4>
+                        <Badge variant="outline" className="text-xs">
+                          Sem {material.semester}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                        {material.description}
+                      </p>
+                      <div className="flex items-center gap-2 mt-3">
+                        <Badge variant="secondary" className={typeColors[material.file_type] || 'bg-gray-100'}>
+                          {(material.file_type || 'Unknown').toUpperCase()}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {material.created_at ? format(new Date(material.created_at), 'MMM d, yyyy') : ''}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
-                  <span className="text-xs text-muted-foreground flex-1">
-                    Uploaded by: {material.teacher_name || 'Unknown'}
-                  </span>
-                  <Button variant="outline" size="sm">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
-                  </Button>
-                  {/* Only show delete if user is admin or owner */}
-                  {/* Note: We need user from context. Assuming useAuth provides { user } */}
-                  {(token && (JSON.parse(atob(token.split('.')[1])).role === 'admin' || String(JSON.parse(atob(token.split('.')[1])).user_id) === String(material.uploaded_by_teacher_id))) && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-destructive"
-                      onClick={() => setMaterialToDelete(material.id)}>
-
-                      <Trash2 className="w-4 h-4" />
+                  <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
+                    <span className="text-xs text-muted-foreground flex-1">
+                      Uploaded by: {material.teacher_name || 'Unknown'}
+                    </span>
+                    <Button variant="outline" size="sm">
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
                     </Button>
-                  )}
-                </div>
-              </div>);
+                    {/* Only show delete if user is admin or owner */}
+                    {/* Note: We need user from context. Assuming useAuth provides { user } */}
+                    {(token && (JSON.parse(atob(token.split('.')[1])).role === 'admin' || String(JSON.parse(atob(token.split('.')[1])).user_id) === String(material.uploaded_by_teacher_id))) && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground hover:text-destructive"
+                        onClick={() => setMaterialToDelete(material.id)}>
 
-          }))}
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>);
+
+            }))}
       </div>
 
       <AlertDialog open={!!materialToDelete} onOpenChange={() => setMaterialToDelete(null)}>

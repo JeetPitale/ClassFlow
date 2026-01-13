@@ -22,8 +22,11 @@ class MaterialController
             if ($student) {
                 $materials = $material->getBySemester($student['semester']);
             }
+        } elseif ($decoded && $decoded['role'] === 'teacher') {
+            // Teachers see ONLY their own materials
+            $materials = $material->getByTeacher($decoded['user_id']);
         } else {
-            // Teachers and Admins see all materials
+            // Admins see all
             $materials = $material->getAll();
         }
 
@@ -61,10 +64,18 @@ class MaterialController
 
             if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
                 $uploadDir = __DIR__ . '/../uploads/';
+
+                // Fix: Ensure directory exists and is writable
                 if (!file_exists($uploadDir)) {
-                    // Suppress warning if directory already exists (race condition) or permissions issue
-                    @mkdir($uploadDir, 0777, true);
+                    if (!mkdir($uploadDir, 0777, true)) {
+                        error_log("Failed to create upload directory: " . $uploadDir);
+                        Response::error("Server Error: Failed to create upload directory");
+                        return;
+                    }
                 }
+
+                // Allow explicit permission check/fix if needed (optional)
+                // chmod($uploadDir, 0777); 
 
                 $fileName = time() . '_' . basename($_FILES['file']['name']);
                 $targetPath = $uploadDir . $fileName;

@@ -52,6 +52,20 @@ class Material
         return $stmt->fetchAll();
     }
 
+    public function getByTeacher($teacher_id)
+    {
+        $query = "SELECT m.*, t.name as teacher_name
+                  FROM " . $this->table_name . " m
+                  LEFT JOIN teachers t ON m.uploaded_by_teacher_id = t.id
+                  WHERE m.uploaded_by_teacher_id = :teacher_id
+                  ORDER BY m.created_at DESC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":teacher_id", $teacher_id);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     public function findById($id)
     {
         $query = "SELECT m.*, t.name as teacher_name
