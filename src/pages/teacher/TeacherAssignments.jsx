@@ -557,6 +557,7 @@ export default function TeacherAssignments() {
 function StudentGradeCard({ student, submission, assignment, onGrade }) {
   // status: 'submitted' or 'pending'. If submitted, we show data.
   // expanded: controls visibility of the form.
+  const { toast } = useToast();
   const [status, setStatus] = useState(submission ? 'submitted' : 'pending');
   const [expanded, setExpanded] = useState(false);
 
