@@ -1063,7 +1063,11 @@ export default function TeacherQuizzes() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  onClick={handleAddQuestion}
+                  onClick={() => {
+                    console.log("Add Question Clicked");
+                    console.log("Form Data:", questionFormData);
+                    handleAddQuestion();
+                  }}
                   disabled={!(user && selectedQuiz && (user.role === 'admin' || String(user.id) === String(selectedQuiz.created_by_teacher_id)))}
                 >
                   <Plus className="w-4 h-4 mr-1" />
@@ -1074,7 +1078,7 @@ export default function TeacherQuizzes() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsQuestionDialogOpen(false)}>Done</Button>
+            <Button variant="outline" onClick={() => setIsQuestionDialogOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
