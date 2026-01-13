@@ -59,31 +59,36 @@ class MaterialController
         $fileType = 'pdf';
 
         try {
+        try {
             if (!empty($_FILES)) {
                 // Multipart/Form-Data
                 $data = (object) $_POST;
 
                 if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-                    $uploadDir = __DIR__ . '/../uploads/';
-
-                    // Fix: Ensure directory exists and is writable
-                    if (!file_exists($uploadDir)) {
-                        if (!@mkdir($uploadDir, 0777, true)) {
-                            $error = error_get_last();
-                            error_log("Failed to create upload directory: " . $uploadDir . " Error: " . ($error['message'] ?? ''));
-                            Response::error("Server configuration error: Cannot create upload directory.");
-                            return;
+                    // Define absolute path to uploads directory at the project root level (sibling of controllers, etc)
+                    // __DIR__ is .../backend/controllers
+                    // we want .../backend/uploads
+                    $uploadDir = realpath(__DIR__ . '/../') . '/uploads/';
+                    
+                    // Create directory if it doesn't exist
+                    if (!is_dir($uploadDir)) {
+                        if (!mkdir($uploadDir, 0755, true)) {
+                             throw new Exception("Failed to create upload directory: " . $uploadDir);
                         }
+                    }
+                    
+                    if (!is_writable($uploadDir)) {
+                        throw new Exception("Upload directory is not writable: " . $uploadDir);
                     }
 
                     $fileName = time() . '_' . basename($_FILES['file']['name']);
+                    // sanitize filename
+                    $fileName = preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName);
+                    
                     $targetPath = $uploadDir . $fileName;
 
-                    if (!@move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
-                        $error = error_get_last();
-                        error_log("Failed to move uploaded file. Dest: $targetPath. Error: " . ($error['message'] ?? ''));
-                        Response::error("Failed to save file. Check server permissions.");
-                        return;
+                    if (!move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
+                         throw new Exception("Failed to move uploaded file to: " . $targetPath);
                     }
 
                     $fileUrl = '/uploads/' . $fileName;
@@ -104,29 +109,26 @@ class MaterialController
                         'wav' => 'audio'
                     ];
                     $fileType = $typeMap[$ext] ?? 'pdf';
-
+                    
                 } elseif (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
-                    // Handle upload errors explicitly
+                     // Map error code to message
+                    $errorCode = $_FILES['file']['error'];
                     $errorMessages = [
-                        UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize',
-                        UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE',
-                        UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
+                        UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
+                        UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
+                        UPLOAD_ERR_PARTIAL => 'The uploaded file was only partially uploaded',
                         UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder',
                         UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
                         UPLOAD_ERR_EXTENSION => 'File upload stopped by extension',
                     ];
-                    $errorCode = $_FILES['file']['error'];
-                    $msg = $errorMessages[$errorCode] ?? 'Unknown upload error';
-                    Response::error("File upload failed: $msg");
-                    return;
+                    throw new Exception("File upload failed: " . ($errorMessages[$errorCode] ?? 'Unknown error'));
                 }
             } else {
-                // Check if post_max_size was exceeded (causing empty $_POST and $_FILES)
-                if ($_SERVER['REQUEST_METHOD'] === 'POST' && (empty($_SERVER['CONTENT_LENGTH']) || empty($_POST)) && empty($_FILES)) {
+                 // Check content length for exceeding post_max_size
+                 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (empty($_SERVER['CONTENT_LENGTH']) || empty($_POST)) && empty($_FILES)) {
                     $contentLength = $_SERVER['CONTENT_LENGTH'] ?? 0;
                     if ($contentLength > 0) {
-                        Response::error('File too large (exceeds post_max_size)');
-                        return;
+                        throw new Exception('File too large (exceeds post_max_size in php.ini)');
                     }
                 }
 
@@ -134,13 +136,10 @@ class MaterialController
                 $input = file_get_contents("php://input");
                 $data = json_decode($input);
                 if (json_last_error() !== JSON_ERROR_NONE && empty($_POST)) {
-                    // If not JSON and not POST data, we have no data
-                    Response::error('Invalid request data: ' . json_last_error_msg());
-                    return;
+                    throw new Exception('Invalid request data: ' . json_last_error_msg());
                 }
 
-                if (!$data)
-                    $data = (object) []; // Ensure object to avoid null property access
+                if (!$data) $data = (object) []; 
 
                 $fileUrl = $data->file_path ?? '';
                 $filePath = $data->file_path ?? '';
