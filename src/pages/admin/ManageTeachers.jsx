@@ -295,18 +295,18 @@ export default function ManageTeachers() {
               </div>
             </div>
 
-            {!editingTeacher && (
-              <div className="space-y-2">
-                <Label htmlFor="password">Password *</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Enter password"
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="password">
+                {editingTeacher ? 'Password (leave blank to keep current)' : 'Password *'}
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder={editingTeacher ? "Enter new password" : "Enter password"}
+              />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
