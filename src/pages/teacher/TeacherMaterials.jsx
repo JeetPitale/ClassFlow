@@ -338,7 +338,7 @@ export default function TeacherMaterials() {
                 value={formData.semester}
                 onValueChange={(value) => setFormData({ ...formData, semester: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="semester">
                   <SelectValue placeholder="Select Semester" />
                 </SelectTrigger>
                 <SelectContent>
@@ -360,7 +360,7 @@ export default function TeacherMaterials() {
 
             </div>
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label htmlFor="type">Type</Label>
               <Select
                 value={formData.type}
                 onValueChange={(value) => {
@@ -369,7 +369,7 @@ export default function TeacherMaterials() {
                 }
                 }>
 
-                <SelectTrigger>
+                <SelectTrigger id="type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
