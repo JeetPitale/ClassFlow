@@ -4,7 +4,8 @@
  */
 
 // API Configuration: Disable HTML error output, log errors instead
-ini_set('display_errors', 0);
+// API Configuration: TEMPORARY DEBUGGING ENABLED
+ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
 
