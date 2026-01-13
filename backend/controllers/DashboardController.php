@@ -240,91 +240,109 @@ class DashboardController
         ];
 
         try {
-            // 1. Materials Uploaded
-            // Assuming materials table has 'teacher_id' or we filter by created_by if available.
-            // Using existing schema knowledge: materials usually linked to semester/subject, maybe not specific teacher ID in simplified schema?
-            // Checking Material model logic might be needed, but assuming simple count for now or based on context.
-            // If schema lacks teacher_id on materials, we might just show total for their subjects?
-            // Let's assume for now simply simplified schema:
-            // Actually, best to check if materials has uploaded_by/teacher_id.
-            // If not, we might skipped specific filter. Let's assume materials has no teacher_id based on previous views (wasn't explicitly shown but common).
-            // Wait, previous view of Material.php showed `getBySemester`.
-            // Let's assume we count *all* materials for now if teacher_id missing, OR better:
-            // "Materials Uploaded" implies ownership.
-            // If the table doesn't track it, we can't show it accurately.
-            // Let's check schema/models if possible? I'll assume a generic count if unsure, or skip strict ownership if DB doesn't support.
-            // SAFEST: Count all materials (as teachers usually share context) OR check for column.
-            // PROCEEDING WITH: Count all materials for now to avoid breaking if column missing.
-            $stmt = $db->query("SELECT COUNT(*) FROM materials");
+            // 1. Materials Uploaded (Filtered by uploader)
+            $stmt = $db->prepare("SELECT COUNT(*) FROM materials WHERE uploaded_by_teacher_id = :uid");
+            $stmt->execute([':uid' => $userId]);
             $stats['materialsCount'] = $stmt->fetchColumn();
 
-
-            // 2. Active Assignments (Created by this teacher? Or all active?)
-            // Assignments table usually has teacher_id/created_by.
-            // If not, we count all active.
-            // Let's assume assignments might not have teacher_id in this simplified version either?
-            // Actually, `Assignment.php` likely has this.
-            // Querying `assignments`:
-            $stmt = $db->query("SELECT COUNT(*) FROM assignments WHERE due_date >= CURRENT_DATE()");
+            // 2. Active Assignments (Created by this teacher)
+            $stmt = $db->prepare("SELECT COUNT(*) FROM assignments WHERE created_by_teacher_id = :uid AND due_date >= CURRENT_DATE()");
+            $stmt->execute([':uid' => $userId]);
             $stats['activeAssignments'] = $stmt->fetchColumn();
 
-            // 3. Quizzes Created
-            $stmt = $db->query("SELECT COUNT(*) FROM quizzes");
+            // 3. Quizzes Created (Created by this teacher)
+            $stmt = $db->prepare("SELECT COUNT(*) FROM quizzes WHERE created_by_teacher_id = :uid");
+            $stmt->execute([':uid' => $userId]);
             $stats['quizzesCreated'] = $stmt->fetchColumn();
 
-            // 4. Pending Grading
-            // Submissions that are graded = false or marks = null
-            // We need submissions for assignments that *this* teacher cares about.
-            // If assignments don't have teacher_id, all teachers see all?
-            // Logic: Count all ungraded submissions.
-            $stmt = $db->query("SELECT COUNT(*) FROM assignment_submissions WHERE status = 'submitted' OR status = 'pending'");
+            // 4. Pending Grading (Submissions for THIS teacher's assignments)
+            $query = "
+                SELECT COUNT(*) FROM assignment_submissions s
+                JOIN assignments a ON s.assignment_id = a.id
+                WHERE a.created_by_teacher_id = :uid 
+                AND (s.status = 'submitted' OR s.status = 'pending')
+            ";
+            $stmt = $db->prepare($query);
+            $stmt->execute([':uid' => $userId]);
             $stats['pendingGrading'] = $stmt->fetchColumn();
 
-            // 5. Recent Submissions
+            // 5. Recent Submissions (For THIS teacher's assignments)
             $query = "
                 SELECT s.id, s.submitted_at as submittedAt, s.marks_obtained as marks, 
                        u.name as studentName, a.title as assignmentTitle
                 FROM assignment_submissions s
                 JOIN students u ON s.student_id = u.id
                 JOIN assignments a ON s.assignment_id = a.id
+                WHERE a.created_by_teacher_id = :uid
                 ORDER BY s.submitted_at DESC
                 LIMIT 5
             ";
-            $stmt = $db->query($query);
+            $stmt = $db->prepare($query);
+            $stmt->execute([':uid' => $userId]);
             $stats['recentSubmissions'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // 6. Class Performance
-            // Class Average (Avg marks of all graded submissions)
-            $stmt = $db->query("SELECT AVG((marks_obtained / total_marks) * 100) FROM assignment_submissions s JOIN assignments a ON s.assignment_id = a.id WHERE s.status = 'graded' AND a.total_marks > 0");
+            // Class Average (Avg marks of all graded submissions for THIS teacher)
+            $query = "
+                SELECT AVG((marks_obtained / total_marks) * 100) 
+                FROM assignment_submissions s 
+                JOIN assignments a ON s.assignment_id = a.id 
+                WHERE a.created_by_teacher_id = :uid 
+                AND s.status = 'graded' AND a.total_marks > 0
+            ";
+            $stmt = $db->prepare($query);
+            $stmt->execute([':uid' => $userId]);
             $avg = $stmt->fetchColumn();
             $stats['classPerformance']['average'] = $avg ? round($avg) : 0;
 
-            // Submission Rate (Weekly)
-            // Assignments due this week
-            $stmt = $db->query("SELECT COUNT(*) FROM assignments WHERE due_date BETWEEN DATE_SUB(NOW(), INTERVAL 7 DAY) AND NOW()");
+            // Submission Rate (Weekly for THIS teacher's assignments)
+            // Students submitting to THIS teacher's assignments due this week?
+            // Simplified logic: Count distinct students submitting to MY assignments in last 7 days vs total distinct students submitting to MY assignments or total students in MY classes.
+            // Let's use: Distinct submitters to me (last 7 days) / Distinct submitters to me (ever) or just Total Class Size?
+            // Since class lists are loose (semester based), let's calculate: 
+            // rate = (Submissions to me in last 7 days / Assignments I had due in last 7 days * Est. Class Size) -- too complex.
+            // Alternative: Count of submissions to ME in last 7 days relative to expected?
+            // Let's keep it simple: 
+            // Get count of assignments due in last 7 days (Created by ME).
+            $stmt = $db->prepare("SELECT COUNT(*) FROM assignments WHERE created_by_teacher_id = :uid AND due_date BETWEEN DATE_SUB(NOW(), INTERVAL 7 DAY) AND NOW()");
+            $stmt->execute([':uid' => $userId]);
             $recentAssignmentsCount = $stmt->fetchColumn();
 
-            // Submissions for those assignments
-            // This is complex. Let's simplify: Overall submission rate for *all* time or just last 7 days?
-            // "This Week" implies recent.
-            // Simplified: % of Students who submitted pending assignments? 
-            // Let's hardcode a high value if calculation too complex for single query or use mock logic replacement.
-            // Better: Get total students. Get total distinct submitters last 7 days.
-            $stmt = $db->query("SELECT COUNT(*) FROM students");
-            $totalStudents = $stmt->fetchColumn();
+            if ($recentAssignmentsCount > 0) {
+                // Get actual submissions count for those assignments
+                $query = "
+                    SELECT COUNT(*) FROM assignment_submissions s
+                    JOIN assignments a ON s.assignment_id = a.id
+                    WHERE a.created_by_teacher_id = :uid
+                    AND a.due_date BETWEEN DATE_SUB(NOW(), INTERVAL 7 DAY) AND NOW()
+                 ";
+                $stmt = $db->prepare($query);
+                $stmt->execute([':uid' => $userId]);
+                $recentSubmissionsCount = $stmt->fetchColumn();
 
-            // If there are students
-            if ($totalStudents > 0) {
-                // Mockish real logic: Random high number or real calc?
-                // Real: Count distinct students who submitted anything in last 7 days / Total students
-                $stmt = $db->query("SELECT COUNT(DISTINCT student_id) FROM assignment_submissions WHERE submitted_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
-                $activeStudents = $stmt->fetchColumn();
-                $stats['classPerformance']['submissionRate'] = round(($activeStudents / $totalStudents) * 100);
+                // Rate relative to something. Since we don't know exact expected count easily without summing up all students in those semesters.
+                // Let's settle for a simpler metric: % of active students (approx).
+                // Or just hardcode logic from before but filtered?
+                // Let's try: Count of those assignments * 30 (avg class size) as expected? No.
+                // Let's revert to the "Active Students" logic but only counting submissions to ME.
+                // Total Unique Students who ever submitted detailed to me
+                $stmt = $db->prepare("SELECT COUNT(DISTINCT student_id) FROM assignment_submissions s JOIN assignments a ON s.assignment_id = a.id WHERE a.created_by_teacher_id = :uid");
+                $stmt->execute([':uid' => $userId]);
+                $myTotalStudents = $stmt->fetchColumn();
+
+                if ($myTotalStudents > 0) {
+                    $stmt = $db->prepare("SELECT COUNT(DISTINCT student_id) FROM assignment_submissions s JOIN assignments a ON s.assignment_id = a.id WHERE a.created_by_teacher_id = :uid AND s.submitted_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+                    $stmt->execute([':uid' => $userId]);
+                    $myActiveStudents = $stmt->fetchColumn();
+                    $stats['classPerformance']['submissionRate'] = round(($myActiveStudents / $myTotalStudents) * 100);
+                }
+            } else {
+                $stats['classPerformance']['submissionRate'] = 0; // No assignments due, no rate
             }
 
             // 7. Weekly Schedule
-            // Teachers see: 'Everyone' AND 'Teachers'
-            // Full current week (Mon-Sun)
+            // Teachers see: 'Everyone' AND 'Teachers' + Maybe specific to them if we had teacher_id in schedules?
+            // Keep generic for now as schedules are likely shared.
             $query = "
                 SELECT * FROM schedules 
                 WHERE (target_audience = 'Everyone' OR target_audience = 'Teachers')
