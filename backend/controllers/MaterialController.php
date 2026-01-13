@@ -62,15 +62,16 @@ class MaterialController
             if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
                 $uploadDir = __DIR__ . '/../uploads/';
                 if (!file_exists($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
+                    // Suppress warning if directory already exists (race condition) or permissions issue
+                    @mkdir($uploadDir, 0777, true);
                 }
 
                 $fileName = time() . '_' . basename($_FILES['file']['name']);
                 $targetPath = $uploadDir . $fileName;
 
                 if (move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
-                    $fileUrl = '/uploads/' . $fileName; // Public URL
-                    $filePath = $targetPath;            // System path
+                    $fileUrl = '/uploads/' . $fileName;
+                    $filePath = $targetPath;
 
                     // Detect file type
                     $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
@@ -90,10 +91,40 @@ class MaterialController
                 } else {
                     Response::error('Failed to move uploaded file');
                 }
+            } elseif (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
+                // Handle upload errors explicitly
+                $errorMessages = [
+                    UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize',
+                    UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE',
+                    UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
+                    UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder',
+                    UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+                    UPLOAD_ERR_EXTENSION => 'File upload stopped by extension',
+                ];
+                $errorCode = $_FILES['file']['error'];
+                $msg = $errorMessages[$errorCode] ?? 'Unknown upload error';
+                Response::error("File upload failed: $msg");
             }
         } else {
-            // JSON fallback (for links or metadata only)
-            $data = json_decode(file_get_contents("php://input"));
+            // Check if post_max_size was exceeded (causing empty $_POST and $_FILES)
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && (empty($_SERVER['CONTENT_LENGTH']) || empty($_POST)) && empty($_FILES)) {
+                $contentLength = $_SERVER['CONTENT_LENGTH'] ?? 0;
+                if ($contentLength > 0) {
+                    Response::error('File too large (exceeds post_max_size)');
+                }
+            }
+
+            // JSON fallback
+            $input = file_get_contents("php://input");
+            $data = json_decode($input);
+            if (json_last_error() !== JSON_ERROR_NONE && empty($_POST)) {
+                // If not JSON and not POST data, we have no data
+                Response::error('Invalid request data');
+            }
+
+            if (!$data)
+                $data = (object) []; // Ensure object to avoid null property access
+
             $fileUrl = $data->file_path ?? '';
             $filePath = $data->file_path ?? '';
             $fileType = $data->file_type ?? 'pdf';

@@ -149,39 +149,34 @@ export default function TeacherMaterials() {
       formDataToSend.append('description', formData.description);
       formDataToSend.append('semester', formData.semester);
 
+      import { materialAPI } from '@/services/api';
+
+      // ... (inside handleSubmit)
+
       if (formData.type === 'link') {
-        formDataToSend.append('file_path', formData.url); // Use file_path for link URL
+        formDataToSend.append('file_path', formData.url);
         formDataToSend.append('file_type', 'link');
       } else if (selectedFiles.length > 0) {
         formDataToSend.append('file', selectedFiles[0]);
-        // file_type will be detected by backend
       } else {
         toast({ title: 'Error', description: 'Please select a file or enter a URL', variant: 'destructive' });
         return;
       }
 
-      const response = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/materials', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-          // Content-Type is handled automatically by browser for FormData
-        },
-        body: formDataToSend
-      });
+      const response = await materialAPI.create(formDataToSend);
 
-      const data = await response.json();
-
-      if (data.success) {
-        setMaterials([data.data, ...materials]);
+      if (response.data.success) {
+        setMaterials([response.data.data, ...materials]);
         setFormData({ title: '', description: '', type: 'pdf', url: '', semester: '1' });
         setSelectedFiles([]);
         setIsDialogOpen(false);
         toast({ title: 'Success', description: 'Material uploaded successfully' });
       } else {
-        toast({ title: 'Error', description: data.message || 'Failed to upload', variant: 'destructive' });
+        toast({ title: 'Error', description: response.data.message || 'Failed to upload', variant: 'destructive' });
       }
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to upload material', variant: 'destructive' });
+      console.error(error);
+      toast({ title: 'Error', description: error.response?.data?.message || 'Failed to upload material', variant: 'destructive' });
     }
   };
 
