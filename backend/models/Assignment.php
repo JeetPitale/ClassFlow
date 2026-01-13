@@ -51,6 +51,19 @@ class Assignment
         return $stmt->fetchAll();
     }
 
+    public function getByTeacher($teacher_id)
+    {
+        $query = "SELECT a.*, t.name as teacher_name
+                  FROM " . $this->table_name . " a
+                  LEFT JOIN teachers t ON a.created_by_teacher_id = t.id
+                  WHERE a.created_by_teacher_id = :teacher_id
+                  ORDER BY a.created_at DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":teacher_id", $teacher_id);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     public function findById($id)
     {
         $query = "SELECT a.*, t.name as teacher_name
