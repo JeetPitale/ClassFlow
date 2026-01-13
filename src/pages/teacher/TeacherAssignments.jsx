@@ -316,70 +316,76 @@ export default function TeacherAssignments() {
         } />
 
       <div className="space-y-4">
-        {assignments.map((assignment, index) => {
-          const isOverdue = isPast(new Date(assignment.due_date));
-          return (
-            <div
-              key={assignment.id}
-              className="card-elevated p-5 animate-slide-up"
-              style={{ animationDelay: `${index * 50}ms` }}>
+        {assignments
+          .filter(assignment => {
+            if (!user) return false;
+            if (user.role === 'admin') return true;
+            return String(assignment.created_by_teacher_id) === String(user.id);
+          })
+          .map((assignment, index) => {
+            const isOverdue = isPast(new Date(assignment.due_date));
+            return (
+              <div
+                key={assignment.id}
+                className="card-elevated p-5 animate-slide-up"
+                style={{ animationDelay: `${index * 50}ms` }}>
 
-              <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                <div className="flex gap-4 flex-1 min-w-0">
-                  <div className="hidden sm:block p-2.5 rounded-lg bg-primary/10 flex-shrink-0">
-                    <ClipboardList className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium text-foreground truncate">{assignment.title}</h4>
-                      {isOverdue ?
-                        <Badge variant="secondary" className="bg-muted text-muted-foreground">Closed</Badge> :
-                        <Badge variant="secondary" className="bg-success/10 text-success">Active</Badge>
-                      }
-                      <Badge variant="outline" className="ml-2">Sem {assignment.semester}</Badge>
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                  <div className="flex gap-4 flex-1 min-w-0">
+                    <div className="hidden sm:block p-2.5 rounded-lg bg-primary/10 flex-shrink-0">
+                      <ClipboardList className="w-5 h-5 text-primary" />
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{assignment.description}</p>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm">
-                      <span className="flex items-center gap-1 text-muted-foreground">
-                        <Calendar className="w-4 h-4" />
-                        Due: {assignment.due_date ? format(new Date(assignment.due_date), 'MMM d, yyyy') : 'No Date'}
-                      </span>
-                      <span className="flex items-center gap-1 text-muted-foreground">
-                        <Award className="w-4 h-4" />
-                        {assignment.total_marks} marks
-                      </span>
-                      {assignment.created_at && (
-                        <span className="flex items-center gap-1 text-muted-foreground text-xs">
-                          Created: {format(new Date(assignment.created_at), 'MMM d, h:mm a')}
-                          {assignment.teacher_name && ` by ${assignment.teacher_name}`}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium text-foreground truncate">{assignment.title}</h4>
+                        {isOverdue ?
+                          <Badge variant="secondary" className="bg-muted text-muted-foreground">Closed</Badge> :
+                          <Badge variant="secondary" className="bg-success/10 text-success">Active</Badge>
+                        }
+                        <Badge variant="outline" className="ml-2">Sem {assignment.semester}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{assignment.description}</p>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm">
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <Calendar className="w-4 h-4" />
+                          Due: {assignment.due_date ? format(new Date(assignment.due_date), 'MMM d, yyyy') : 'No Date'}
                         </span>
-                      )}
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <Award className="w-4 h-4" />
+                          {assignment.total_marks} marks
+                        </span>
+                        {assignment.created_at && (
+                          <span className="flex items-center gap-1 text-muted-foreground text-xs">
+                            Created: {format(new Date(assignment.created_at), 'MMM d, h:mm a')}
+                            {assignment.teacher_name && ` by ${assignment.teacher_name}`}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                  <Button variant="outline" size="sm" onClick={() => handleOpenGrading(assignment)}>
-                    <Users className="w-4 h-4 mr-1" />
-                    Class List
-                  </Button>
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                    <Button variant="outline" size="sm" onClick={() => handleOpenGrading(assignment)}>
+                      <Users className="w-4 h-4 mr-1" />
+                      Class List
+                    </Button>
 
-                  {/* Only show Edit/Delete if user is creator (or admin) */}
-                  {/* We need to get 'user' from useAuth hook in component, verify it is used */}
-                  {(user && (user.role === 'admin' || String(user.id) === String(assignment.created_by_teacher_id))) && (
-                    <>
-                      <Button variant="outline" size="sm" onClick={() => handleOpenEdit(assignment)}>
-                        <Pencil className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleOpenDelete(assignment)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </>
-                  )}
+                    {/* Only show Edit/Delete if user is creator (or admin) */}
+                    {/* We need to get 'user' from useAuth hook in component, verify it is used */}
+                    {(user && (user.role === 'admin' || String(user.id) === String(assignment.created_by_teacher_id))) && (
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => handleOpenEdit(assignment)}>
+                          <Pencil className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleOpenDelete(assignment)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>);
-        })}
+              </div>);
+          })}
       </div>
 
       {/* Create/Edit Assignment Dialog */}
