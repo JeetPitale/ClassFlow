@@ -146,10 +146,16 @@ class MaterialController
                 $filePath = $data->file_path ?? '';
                 $fileType = $data->file_type ?? 'pdf';
             }
-        } catch (Exception $e) {
-            error_log("Material Upload Exception: " . $e->getMessage());
-            Response::error("Internal Server Error during upload: " . $e->getMessage());
-            return;
+        } catch (\Throwable $e) {
+            error_log("Material Upload Critical Error: " . $e->getMessage());
+            // Force 500 status code
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => "Server Error: " . $e->getMessage(),
+                'trace' => $e->getTraceAsString() // Optional: helpful for debugging, remove in prod if sensitive
+            ]);
+            exit();
         }
 
         if (!isset($data->title) || !isset($data->semester)) {
