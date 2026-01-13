@@ -660,76 +660,82 @@ export default function TeacherQuizzes() {
 
         <TabsContent value="quizzes" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {quizzes.map((quiz, index) =>
-              <div
-                key={quiz.id}
-                className="card-elevated p-5 animate-slide-up"
-                style={{ animationDelay: `${index * 50}ms` }}>
+            {quizzes
+              .filter(quiz => {
+                if (!user) return false;
+                if (user.role === 'admin') return true;
+                return String(quiz.created_by_teacher_id) === String(user.id);
+              })
+              .map((quiz, index) =>
+                <div
+                  key={quiz.id}
+                  className="card-elevated p-5 animate-slide-up"
+                  style={{ animationDelay: `${index * 50}ms` }}>
 
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="hidden sm:block p-2.5 rounded-lg bg-info/10 flex-shrink-0">
-                    <BookOpen className="w-5 h-5 text-info" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-medium text-foreground truncate max-w-[70%]">{quiz.title}</h4>
-                      <Badge variant="outline" className="text-xs">
-                        Sem {quiz.semester}
-                      </Badge>
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="hidden sm:block p-2.5 rounded-lg bg-info/10 flex-shrink-0">
+                      <BookOpen className="w-5 h-5 text-info" />
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                      {quiz.description}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-medium text-foreground truncate max-w-[70%]">{quiz.title}</h4>
+                        <Badge variant="outline" className="text-xs">
+                          Sem {quiz.semester}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                        {quiz.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 mb-4">
+                    <Badge variant="secondary" className="gap-1">
+                      <Clock className="w-3 h-3" />
+                      {quiz.duration} min
+                    </Badge>
+                    <Badge variant="secondary" className="gap-1">
+                      <Award className="w-3 h-3" />
+                      {quiz.maxMarks} marks
+                    </Badge>
+                    <Badge variant="secondary" className="gap-1">
+                      <Users className="w-3 h-3" />
+                      {quiz.question_count || 0} questions
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-border">
+                    <span className="text-xs text-muted-foreground">
+                      {(() => {
+                        try {
+                          const date = new Date(quiz.createdAt);
+                          return !isNaN(date.getTime()) ? format(date, 'MMM d, yyyy') : 'N/A';
+                        } catch { return 'N/A'; }
+                      })()}
+                    </span>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleOpenQuestions(quiz)}>
+                        <ListPlus className="w-4 h-4" />
+                      </Button>
+                      {(user && (user.role === 'admin' || user.id === quiz.created_by_teacher_id)) && (
+                        <>
+                          <Button variant="outline" size="sm" onClick={() => handleOpenEditQuiz(quiz)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                            onClick={() => handleOpenDeleteQuiz(quiz)}>
+
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-
-                <div className="flex flex-wrap gap-3 mb-4">
-                  <Badge variant="secondary" className="gap-1">
-                    <Clock className="w-3 h-3" />
-                    {quiz.duration} min
-                  </Badge>
-                  <Badge variant="secondary" className="gap-1">
-                    <Award className="w-3 h-3" />
-                    {quiz.maxMarks} marks
-                  </Badge>
-                  <Badge variant="secondary" className="gap-1">
-                    <Users className="w-3 h-3" />
-                    {quiz.question_count || 0} questions
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-border">
-                  <span className="text-xs text-muted-foreground">
-                    {(() => {
-                      try {
-                        const date = new Date(quiz.createdAt);
-                        return !isNaN(date.getTime()) ? format(date, 'MMM d, yyyy') : 'N/A';
-                      } catch { return 'N/A'; }
-                    })()}
-                  </span>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleOpenQuestions(quiz)}>
-                      <ListPlus className="w-4 h-4" />
-                    </Button>
-                    {(user && (user.role === 'admin' || user.id === quiz.created_by_teacher_id)) && (
-                      <>
-                        <Button variant="outline" size="sm" onClick={() => handleOpenEditQuiz(quiz)}>
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                          onClick={() => handleOpenDeleteQuiz(quiz)}>
-
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+              )}
           </div>
         </TabsContent>
 
