@@ -65,4 +65,12 @@ class Response
     {
         self::error($message, 422, $errors);
     }
+
+    /**
+     * Send server error response
+     */
+    public static function serverError($message = "Internal Server Error")
+    {
+        self::error($message, 500);
+    }
 }
