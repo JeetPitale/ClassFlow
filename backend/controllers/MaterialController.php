@@ -145,39 +145,51 @@ class MaterialController
                 $filePath = $data->file_path ?? '';
                 $fileType = $data->file_type ?? 'pdf';
             }
+
+            // --- MOVED INSIDE TRY-CATCH ---
+            if (!isset($data->title) || !isset($data->semester)) {
+                // Manually throw to be caught by catch block, or just return Response::validationError (which exits)
+                // Response::validationError calls exit(), so it is fine.
+                Response::validationError(['title' => 'Title required', 'semester' => 'Semester required']);
+            }
+
+            $material = new Material();
+            $material->title = $data->title;
+            // Handle null description safely
+            $material->description = $data->description ?? '';
+            $material->file_path = $filePath;
+            $material->file_url = $fileUrl;
+            $material->file_type = $fileType;
+            $material->uploaded_by_teacher_id = $decoded['user_id'];
+            $material->semester = $data->semester;
+
+            if ($material->create()) {
+                // Trigger notification
+                try {
+                    require_once __DIR__ . '/../utils/NotificationHelper.php';
+                    NotificationHelper::createMaterialNotification($material->findById($material->id));
+                } catch (\Throwable $nErr) {
+                    error_log("Notification Error: " . $nErr->getMessage());
+                    // Don't fail the upload if notification fails
+                }
+
+                Response::success($material->findById($material->id), 'Material uploaded successfully', 201);
+            } else {
+                throw new Exception("Failed to insert material into database.");
+            }
+
         } catch (\Throwable $e) {
             error_log("Material Upload Critical Error: " . $e->getMessage());
+            error_log("Trace: " . $e->getTraceAsString());
+
             // Force 500 status code
             http_response_code(500);
             echo json_encode([
                 'success' => false,
                 'message' => "Server Error: " . $e->getMessage(),
-                'trace' => $e->getTraceAsString() // Optional: helpful for debugging, remove in prod if sensitive
+                // 'trace' => $e->getTraceAsString() // Keep trace for debugging this specific issue
             ]);
             exit();
-        }
-
-        if (!isset($data->title) || !isset($data->semester)) {
-            Response::validationError(['title' => 'Title required', 'semester' => 'Semester required']);
-        }
-
-        $material = new Material();
-        $material->title = $data->title;
-        $material->description = $data->description ?? '';
-        $material->file_path = $filePath;
-        $material->file_url = $fileUrl;
-        $material->file_type = $fileType;
-        $material->uploaded_by_teacher_id = $decoded['user_id'];
-        $material->semester = $data->semester;
-
-        if ($material->create()) {
-            // Trigger notification
-            require_once __DIR__ . '/../utils/NotificationHelper.php';
-            NotificationHelper::createMaterialNotification($material->findById($material->id));
-
-            Response::success($material->findById($material->id), 'Material uploaded successfully', 201);
-        } else {
-            Response::error('Failed to upload material');
         }
     }
 
