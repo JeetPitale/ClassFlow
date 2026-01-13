@@ -8,27 +8,33 @@ class QuizController
     public static function index()
     {
         $headers = getallheaders();
-        $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
+        $authHeader = $headers['Authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        $token = str_replace('Bearer ', '', $authHeader);
         $decoded = JWTHandler::validateToken($token);
+
+        if (!$decoded) {
+            Response::unauthorized('Invalid or missing authentication token');
+        }
 
         $quiz = new Quiz();
         $quizzes = [];
 
-        if ($decoded && $decoded['role'] === 'student') {
+        if ($decoded['role'] === 'student') {
             require_once __DIR__ . '/../models/Student.php';
             $studentModel = new Student();
             $student = $studentModel->findById($decoded['user_id']);
 
             if ($student) {
-                // Assuming Quiz model has getBySemester method (which I verified it does)
                 $quizzes = $quiz->getBySemester($student['semester']);
             }
-        } elseif ($decoded && $decoded['role'] === 'teacher') {
+        } elseif ($decoded['role'] === 'teacher') {
             // Teachers see only their own quizzes
             $quizzes = $quiz->getByTeacher($decoded['user_id']);
-        } else {
+        } elseif ($decoded['role'] === 'admin') {
             // Admins see all quizzes
             $quizzes = $quiz->getAll();
+        } else {
+            Response::forbidden('Access denied');
         }
 
         Response::success($quizzes);

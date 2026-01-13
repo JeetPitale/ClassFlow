@@ -16,11 +16,18 @@ class Database
     /**
      * Get database connection
      */
+    private static $connectionInstance = null;
+
     /**
      * Get database connection
      */
     public function getConnection()
     {
+        // Return existing connection if available (Singleton)
+        if (self::$connectionInstance !== null) {
+            return self::$connectionInstance;
+        }
+
         $this->conn = null;
 
         // Load configuration from environment variables or use defaults
@@ -55,6 +62,10 @@ class Database
                 $options
             );
             $this->conn->exec("set names utf8mb4");
+
+            // Store instance
+            self::$connectionInstance = $this->conn;
+
         } catch (PDOException $exception) {
             echo "Connection error: " . $exception->getMessage();
         }
