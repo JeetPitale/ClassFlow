@@ -96,7 +96,10 @@ class QuizController
             Response::notFound('Quiz not found');
         }
 
-        // Ideally check ownership here: if ($existing['created_by_teacher_id'] != $decoded['user_id']) Response::forbidden();
+        // Enforce ownership
+        if (!$decoded || $decoded['role'] !== 'admin' && $existing['created_by_teacher_id'] != $decoded['user_id']) {
+            Response::forbidden('You can only update quizzes you created');
+        }
 
         $quiz->id = $id;
         $quiz->title = $data->title ?? $existing['title'];
@@ -114,9 +117,21 @@ class QuizController
 
     public static function destroy($id)
     {
+        $headers = getallheaders();
+        $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
+        $decoded = JWTHandler::validateToken($token);
+
         $quiz = new Quiz();
-        if (!$quiz->findById($id))
+        $existing = $quiz->findById($id);
+
+        if (!$existing)
             Response::notFound('Quiz not found');
+
+        // Enforce ownership
+        if (!$decoded || ($decoded['role'] !== 'admin' && $existing['created_by_teacher_id'] != $decoded['user_id'])) {
+            Response::forbidden('You can only delete quizzes you created');
+        }
+
         $quiz->id = $id;
         if ($quiz->delete()) {
             Response::success(null, 'Quiz deleted successfully');

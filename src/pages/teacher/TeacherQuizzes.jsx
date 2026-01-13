@@ -57,7 +57,7 @@ export default function TeacherQuizzes() {
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [editingQuestion, setEditingQuestion] = useState(null);
   const fileInputRef = useRef(null);
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const [quizFormData, setQuizFormData] = useState({
     title: '',
@@ -711,17 +711,21 @@ export default function TeacherQuizzes() {
                     <Button variant="outline" size="sm" onClick={() => handleOpenQuestions(quiz)}>
                       <ListPlus className="w-4 h-4" />
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleOpenEditQuiz(quiz)}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                      onClick={() => handleOpenDeleteQuiz(quiz)}>
+                    {(user && (user.role === 'admin' || user.id === quiz.created_by_teacher_id)) && (
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => handleOpenEditQuiz(quiz)}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          onClick={() => handleOpenDeleteQuiz(quiz)}>
 
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
