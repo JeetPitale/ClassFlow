@@ -226,9 +226,16 @@ export default function TeacherMaterials() {
             .filter(material => {
               // Frontend Strict Isolation
               if (!token) return false;
-              const userData = JSON.parse(atob(token.split('.')[1]));
-              if (userData.role === 'admin') return true;
-              return String(material.uploaded_by_teacher_id) === String(userData.user_id);
+              try {
+                const parts = token.split('.');
+                if (parts.length !== 3) return false; // Invalid JWT format
+                const userData = JSON.parse(atob(parts[1]));
+                if (userData.role === 'admin') return true;
+                return String(material.uploaded_by_teacher_id) === String(userData.user_id);
+              } catch (e) {
+                console.error("Error parsing token for material isolation:", e);
+                return false;
+              }
             })
             .map((material, index) => {
               const Icon = typeIcons[material.file_type] || FileText;
