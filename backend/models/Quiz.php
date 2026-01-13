@@ -52,6 +52,20 @@ class Quiz
         return $stmt->fetchAll();
     }
 
+    public function getByTeacher($teacher_id)
+    {
+        $query = "SELECT q.*, t.name as teacher_name,
+                  (SELECT COUNT(*) FROM " . $this->questions_table . " WHERE quiz_id = q.id) as question_count
+                  FROM " . $this->table_name . " q
+                  LEFT JOIN teachers t ON q.created_by_teacher_id = t.id
+                  WHERE q.created_by_teacher_id = :teacher_id
+                  ORDER BY q.created_at DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":teacher_id", $teacher_id);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     public function findById($id)
     {
         $query = "SELECT q.*, t.name as teacher_name

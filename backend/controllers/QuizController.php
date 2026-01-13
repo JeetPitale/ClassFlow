@@ -23,8 +23,11 @@ class QuizController
                 // Assuming Quiz model has getBySemester method (which I verified it does)
                 $quizzes = $quiz->getBySemester($student['semester']);
             }
+        } elseif ($decoded && $decoded['role'] === 'teacher') {
+            // Teachers see only their own quizzes
+            $quizzes = $quiz->getByTeacher($decoded['user_id']);
         } else {
-            // Teachers and Admins see all quizzes
+            // Admins see all quizzes
             $quizzes = $quiz->getAll();
         }
 
