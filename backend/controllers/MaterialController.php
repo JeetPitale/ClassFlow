@@ -59,7 +59,6 @@ class MaterialController
         $fileType = 'pdf';
 
         try {
-        try {
             if (!empty($_FILES)) {
                 // Multipart/Form-Data
                 $data = (object) $_POST;
@@ -69,14 +68,14 @@ class MaterialController
                     // __DIR__ is .../backend/controllers
                     // we want .../backend/uploads
                     $uploadDir = realpath(__DIR__ . '/../') . '/uploads/';
-                    
+
                     // Create directory if it doesn't exist
                     if (!is_dir($uploadDir)) {
                         if (!mkdir($uploadDir, 0755, true)) {
-                             throw new Exception("Failed to create upload directory: " . $uploadDir);
+                            throw new Exception("Failed to create upload directory: " . $uploadDir);
                         }
                     }
-                    
+
                     if (!is_writable($uploadDir)) {
                         throw new Exception("Upload directory is not writable: " . $uploadDir);
                     }
@@ -84,11 +83,11 @@ class MaterialController
                     $fileName = time() . '_' . basename($_FILES['file']['name']);
                     // sanitize filename
                     $fileName = preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName);
-                    
+
                     $targetPath = $uploadDir . $fileName;
 
                     if (!move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
-                         throw new Exception("Failed to move uploaded file to: " . $targetPath);
+                        throw new Exception("Failed to move uploaded file to: " . $targetPath);
                     }
 
                     $fileUrl = '/uploads/' . $fileName;
@@ -109,9 +108,9 @@ class MaterialController
                         'wav' => 'audio'
                     ];
                     $fileType = $typeMap[$ext] ?? 'pdf';
-                    
+
                 } elseif (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
-                     // Map error code to message
+                    // Map error code to message
                     $errorCode = $_FILES['file']['error'];
                     $errorMessages = [
                         UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
@@ -124,8 +123,8 @@ class MaterialController
                     throw new Exception("File upload failed: " . ($errorMessages[$errorCode] ?? 'Unknown error'));
                 }
             } else {
-                 // Check content length for exceeding post_max_size
-                 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (empty($_SERVER['CONTENT_LENGTH']) || empty($_POST)) && empty($_FILES)) {
+                // Check content length for exceeding post_max_size
+                if ($_SERVER['REQUEST_METHOD'] === 'POST' && (empty($_SERVER['CONTENT_LENGTH']) || empty($_POST)) && empty($_FILES)) {
                     $contentLength = $_SERVER['CONTENT_LENGTH'] ?? 0;
                     if ($contentLength > 0) {
                         throw new Exception('File too large (exceeds post_max_size in php.ini)');
@@ -139,7 +138,8 @@ class MaterialController
                     throw new Exception('Invalid request data: ' . json_last_error_msg());
                 }
 
-                if (!$data) $data = (object) []; 
+                if (!$data)
+                    $data = (object) [];
 
                 $fileUrl = $data->file_path ?? '';
                 $filePath = $data->file_path ?? '';
