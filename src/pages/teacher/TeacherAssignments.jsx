@@ -349,6 +349,7 @@ export default function TeacherAssignments() {
                       {assignment.created_at && (
                         <span className="flex items-center gap-1 text-muted-foreground text-xs">
                           Created: {format(new Date(assignment.created_at), 'MMM d, h:mm a')}
+                          {assignment.teacher_name && ` by ${assignment.teacher_name}`}
                         </span>
                       )}
                     </div>

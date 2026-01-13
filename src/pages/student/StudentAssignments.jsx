@@ -82,6 +82,11 @@ export default function StudentAssignments() {
                                                 <Award className="w-4 h-4" />
                                                 {assignment.total_marks} Marks
                                             </div>
+                                            {assignment.teacher_name && (
+                                                <div className="flex items-center gap-1.5 text-xs text-primary/80 font-medium">
+                                                    By: {assignment.teacher_name}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
