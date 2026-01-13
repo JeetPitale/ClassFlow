@@ -256,18 +256,25 @@ export default function TeacherMaterials() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <span className="text-xs text-muted-foreground flex-1">
+                    Uploaded by: {material.teacher_name || 'Unknown'}
+                  </span>
+                  <Button variant="outline" size="sm">
                     <Download className="w-4 h-4 mr-2" />
                     Download
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-destructive"
-                    onClick={() => setMaterialToDelete(material.id)}>
+                  {/* Only show delete if user is admin or owner */}
+                  {/* Note: We need user from context. Assuming useAuth provides { user } */}
+                  {(token && (JSON.parse(atob(token.split('.')[1])).role === 'admin' || String(JSON.parse(atob(token.split('.')[1])).user_id) === String(material.uploaded_by_teacher_id))) && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-destructive"
+                      onClick={() => setMaterialToDelete(material.id)}>
 
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </div>);
 

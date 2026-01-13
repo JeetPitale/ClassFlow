@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Plus, ClipboardList, Calendar, Award, Users, Pencil, Trash2, Upload, FileText, X, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,7 @@ const ALLOWED_FILE_TYPES = [
 ];
 
 export default function TeacherAssignments() {
+  const { user } = useAuth();
   const [assignments, setAssignments] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [students, setStudents] = useState([]);
@@ -360,13 +362,20 @@ export default function TeacherAssignments() {
                     <Users className="w-4 h-4 mr-1" />
                     Class List
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleOpenEdit(assignment)}>
-                    <Pencil className="w-4 h-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleOpenDelete(assignment)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+
+                  {/* Only show Edit/Delete if user is creator (or admin) */}
+                  {/* We need to get 'user' from useAuth hook in component, verify it is used */}
+                  {(user && (user.role === 'admin' || String(user.id) === String(assignment.created_by_teacher_id))) && (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => handleOpenEdit(assignment)}>
+                        <Pencil className="w-4 h-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleOpenDelete(assignment)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>);

@@ -163,8 +163,15 @@ class MaterialController
             Response::unauthorized('Invalid token');
 
         $material = new Material();
-        if (!$material->findById($id))
+        $existing = $material->findById($id);
+
+        if (!$existing)
             Response::notFound('Material not found');
+
+        // Enforce ownership: Only Admin or the Original Uploader can delete
+        if ($decoded['role'] !== 'admin' && $existing['uploaded_by_teacher_id'] != $decoded['user_id']) {
+            Response::forbidden('You can only delete materials you uploaded');
+        }
 
         $material->id = $id;
         if ($material->delete()) {
