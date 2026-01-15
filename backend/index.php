@@ -222,5 +222,8 @@ elseif ($method === 'PUT' && $uri === '/api/profile/change-password')
     ProfileController::changePassword();
 elseif ($method === 'PUT' && $uri === '/api/auth/password') // Alias for flexibility
     ProfileController::changePassword();
-else
+elseif ($method === 'GET' && $uri === '/debug-dashboard') {
+    require_once __DIR__ . '/debug_dashboard.php';
+    exit;
+} else
     Response::notFound('Route not found: ' . $method . ' ' . $uri);
