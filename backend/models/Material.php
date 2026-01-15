@@ -101,6 +101,30 @@ class Material
         return false;
     }
 
+    public function update()
+    {
+        $query = "UPDATE " . $this->table_name . "
+                  SET title = :title,
+                      description = :description,
+                      file_path = :file_path,
+                      file_url = :file_url,
+                      file_type = :file_type,
+                      semester = :semester
+                  WHERE id = :id";
+
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->bindParam(":title", $this->title);
+        $stmt->bindParam(":description", $this->description);
+        $stmt->bindParam(":file_path", $this->file_path);
+        $stmt->bindParam(":file_url", $this->file_url);
+        $stmt->bindParam(":file_type", $this->file_type);
+        $stmt->bindParam(":semester", $this->semester);
+        $stmt->bindParam(":id", $this->id);
+
+        return $stmt->execute();
+    }
+
     public function delete()
     {
         $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";

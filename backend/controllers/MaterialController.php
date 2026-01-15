@@ -193,6 +193,73 @@ class MaterialController
         }
     }
 
+    public static function update($id)
+    {
+        $headers = getallheaders();
+        $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
+        $decoded = JWTHandler::validateToken($token);
+
+        if (!$decoded || $decoded['role'] !== 'teacher') {
+            Response::forbidden('Only teachers can update materials');
+        }
+
+        // Handle POST/Multipart
+        $data = (object) $_POST;
+        $material = new Material();
+        $existing = $material->findById($id);
+
+        if (!$existing) {
+            Response::notFound('Material not found');
+        }
+
+        if ($existing['uploaded_by_teacher_id'] != $decoded['user_id']) {
+            Response::forbidden('You can only update materials you uploaded');
+        }
+
+        // Handle File Update
+        $filePath = $existing['file_path'];
+        $fileUrl = $existing['file_url'];
+        $fileType = $existing['file_type'];
+
+        if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = realpath(__DIR__ . '/../') . '/uploads/';
+            if (!is_dir($uploadDir))
+                mkdir($uploadDir, 0755, true);
+
+            $fileName = time() . '_' . basename($_FILES['file']['name']);
+            $fileName = preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName);
+            $targetPath = $uploadDir . $fileName;
+
+            if (move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
+                // Remove old file
+                if (file_exists($existing['file_path'])) {
+                    unlink($existing['file_path']);
+                }
+                $filePath = $targetPath;
+                $fileUrl = '/uploads/' . $fileName;
+
+                // Update type
+                $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                $typeMap = ['pdf' => 'pdf', 'doc' => 'doc', 'docx' => 'doc', 'ppt' => 'slides', 'pptx' => 'slides', 'jpg' => 'image', 'png' => 'image'];
+                $fileType = $typeMap[$ext] ?? 'pdf';
+            }
+        }
+
+        $material->id = $id;
+        $material->title = $_POST['title'] ?? $existing['title'];
+        $material->description = $_POST['description'] ?? $existing['description'];
+        $material->file_path = $filePath;
+        $material->file_url = $fileUrl;
+        $material->file_type = $fileType;
+        $material->semester = $_POST['semester'] ?? $existing['semester'];
+
+        if ($material->update()) {
+            Response::success(null, 'Material updated successfully');
+        } else {
+            Response::error('Failed to update material');
+        }
+    }
+
     public static function destroy($id)
     {
         $headers = getallheaders();
