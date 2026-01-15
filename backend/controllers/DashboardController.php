@@ -240,7 +240,7 @@ class DashboardController
         ];
 
         try {
-            // 1. Materials Uploaded (Filtered by uploader)
+            // 1. Materials Uploaded (Strictly by this teacher)
             $stmt = $db->prepare("SELECT COUNT(*) FROM materials WHERE uploaded_by_teacher_id = :uid");
             $stmt->execute([':uid' => $userId]);
             $stats['materialsCount'] = $stmt->fetchColumn();
@@ -296,36 +296,12 @@ class DashboardController
             $stats['classPerformance']['average'] = $avg ? round($avg) : 0;
 
             // Submission Rate (Weekly for THIS teacher's assignments)
-            // Students submitting to THIS teacher's assignments due this week?
-            // Simplified logic: Count distinct students submitting to MY assignments in last 7 days vs total distinct students submitting to MY assignments or total students in MY classes.
-            // Let's use: Distinct submitters to me (last 7 days) / Distinct submitters to me (ever) or just Total Class Size?
-            // Since class lists are loose (semester based), let's calculate: 
-            // rate = (Submissions to me in last 7 days / Assignments I had due in last 7 days * Est. Class Size) -- too complex.
-            // Alternative: Count of submissions to ME in last 7 days relative to expected?
-            // Let's keep it simple: 
-            // Get count of assignments due in last 7 days (Created by ME).
             $stmt = $db->prepare("SELECT COUNT(*) FROM assignments WHERE created_by_teacher_id = :uid AND due_date BETWEEN DATE_SUB(NOW(), INTERVAL 7 DAY) AND NOW()");
             $stmt->execute([':uid' => $userId]);
             $recentAssignmentsCount = $stmt->fetchColumn();
 
             if ($recentAssignmentsCount > 0) {
-                // Get actual submissions count for those assignments
-                $query = "
-                    SELECT COUNT(*) FROM assignment_submissions s
-                    JOIN assignments a ON s.assignment_id = a.id
-                    WHERE a.created_by_teacher_id = :uid
-                    AND a.due_date BETWEEN DATE_SUB(NOW(), INTERVAL 7 DAY) AND NOW()
-                 ";
-                $stmt = $db->prepare($query);
-                $stmt->execute([':uid' => $userId]);
-                $recentSubmissionsCount = $stmt->fetchColumn();
-
-                // Rate relative to something. Since we don't know exact expected count easily without summing up all students in those semesters.
-                // Let's settle for a simpler metric: % of active students (approx).
-                // Or just hardcode logic from before but filtered?
-                // Let's try: Count of those assignments * 30 (avg class size) as expected? No.
-                // Let's revert to the "Active Students" logic but only counting submissions to ME.
-                // Total Unique Students who ever submitted detailed to me
+                // Active students (submitted to ME in last 7 days) / Total Students (submitted to ME ever)
                 $stmt = $db->prepare("SELECT COUNT(DISTINCT student_id) FROM assignment_submissions s JOIN assignments a ON s.assignment_id = a.id WHERE a.created_by_teacher_id = :uid");
                 $stmt->execute([':uid' => $userId]);
                 $myTotalStudents = $stmt->fetchColumn();
@@ -335,14 +311,14 @@ class DashboardController
                     $stmt->execute([':uid' => $userId]);
                     $myActiveStudents = $stmt->fetchColumn();
                     $stats['classPerformance']['submissionRate'] = round(($myActiveStudents / $myTotalStudents) * 100);
+                } else {
+                    $stats['classPerformance']['submissionRate'] = 0;
                 }
             } else {
-                $stats['classPerformance']['submissionRate'] = 0; // No assignments due, no rate
+                $stats['classPerformance']['submissionRate'] = 0;
             }
 
-            // 7. Weekly Schedule
-            // Teachers see: 'Everyone' AND 'Teachers' + Maybe specific to them if we had teacher_id in schedules?
-            // Keep generic for now as schedules are likely shared.
+            // 7. Weekly Schedule (Keep generic as schedules are shared/admin managed usually)
             $query = "
                 SELECT * FROM schedules 
                 WHERE (target_audience = 'Everyone' OR target_audience = 'Teachers')
