@@ -150,25 +150,10 @@ export default function StudentMaterials() {
                 {material.teacher_name && (
                   <p className="text-xs text-muted-foreground mt-2">Posted by: {material.teacher_name}</p>
                 )}
-                {material.file_type !== 'link' && (
-                  <Button variant="ghost" size="icon" onClick={() => {
-                    const viewUrl = `${api.defaults.baseURL}/materials/${material.id}/download?token=${token}&inline=true`;
-                    window.open(viewUrl, '_blank');
-                  }}>
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                )}
               </div>
-                {
-              material.teacher_name && (
-                <p className="text-xs text-muted-foreground mt-2">Posted by: {material.teacher_name}</p>
-              )
-            }
-              </div>
-    </div>);
-
-}))}
-    </div >
+            );
+          }))}
+      </div >
     </div >);
 
 }
