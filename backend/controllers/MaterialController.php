@@ -68,17 +68,22 @@ class MaterialController
                     // Define absolute path to uploads directory at the project root level (sibling of controllers, etc)
                     // __DIR__ is .../backend/controllers
                     // we want .../backend/uploads
-                    $uploadDir = realpath(__DIR__ . '/../') . '/uploads/';
+                    // Use dirname(__DIR__) to get the parent directory (backend root)
+                    $uploadDir = dirname(__DIR__) . '/uploads/';
 
                     // Create directory if it doesn't exist
                     if (!is_dir($uploadDir)) {
-                        if (!mkdir($uploadDir, 0755, true)) {
-                            throw new Exception("Failed to create upload directory: " . $uploadDir);
+                        if (!mkdir($uploadDir, 0777, true)) {
+                            error_log("Failed to create upload directory: " . $uploadDir);
                         }
                     }
 
+                    // Try to ensure it is writable
+                    @chmod($uploadDir, 0777);
+
                     if (!is_writable($uploadDir)) {
-                        throw new Exception("Upload directory is not writable: " . $uploadDir);
+                        error_log("Upload directory is not writable: " . $uploadDir);
+                        // We continue to see if move_uploaded_file works anyway, sometimes is_writable is false positive on some setups
                     }
 
                     $fileName = time() . '_' . basename($_FILES['file']['name']);
@@ -88,7 +93,9 @@ class MaterialController
                     $targetPath = $uploadDir . $fileName;
 
                     if (!move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
-                        throw new Exception("Failed to move uploaded file to: " . $targetPath);
+                        // Detailed error for debugging
+                        $error = error_get_last();
+                        throw new Exception("Failed to move uploaded file to: " . $targetPath . " (Error: " . ($error['message'] ?? 'Unknown') . ")");
                     }
 
                     $fileUrl = '/uploads/' . $fileName;
@@ -223,9 +230,12 @@ class MaterialController
         $fileType = $existing['file_type'];
 
         if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = realpath(__DIR__ . '/../') . '/uploads/';
-            if (!is_dir($uploadDir))
-                mkdir($uploadDir, 0755, true);
+            $uploadDir = dirname(__DIR__) . '/uploads/';
+
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            @chmod($uploadDir, 0777);
 
             $fileName = time() . '_' . basename($_FILES['file']['name']);
             $fileName = preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName);
