@@ -93,6 +93,8 @@ elseif ($method === 'POST' && $uri === '/api/materials')
     MaterialController::store();
 elseif ($method === 'DELETE' && preg_match('/^\/api\/materials\/(\d+)$/', $uri, $m))
     MaterialController::destroy($m[1]);
+elseif ($method === 'POST' && preg_match('/^\/api\/materials\/(\d+)\/update$/', $uri, $m))
+    MaterialController::update($m[1]);
 elseif ($method === 'GET' && preg_match('/^\/api\/materials\/(\d+)\/download$/', $uri, $m))
     MaterialController::download($m[1]);
 

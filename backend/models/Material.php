@@ -82,13 +82,13 @@ class Material
     public function create()
     {
         $query = "INSERT INTO " . $this->table_name . "
-                  (title, description, file_path, file_url, file_type, uploaded_by_teacher_id, semester)
-                  VALUES (:title, :description, :file_path, :file_url, :file_type, :uploaded_by_teacher_id, :semester)";
+                  (title, description, file_url, file_type, uploaded_by_teacher_id, semester)
+                  VALUES (:title, :description, :file_url, :file_type, :uploaded_by_teacher_id, :semester)";
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":title", $this->title);
         $stmt->bindParam(":description", $this->description);
-        $stmt->bindParam(":file_path", $this->file_path);
+        // $stmt->bindParam(":file_path", $this->file_path); // Removed as not in DB
         $stmt->bindParam(":file_url", $this->file_url);
         $stmt->bindParam(":file_type", $this->file_type);
         $stmt->bindParam(":uploaded_by_teacher_id", $this->uploaded_by_teacher_id);
@@ -106,7 +106,6 @@ class Material
         $query = "UPDATE " . $this->table_name . "
                   SET title = :title,
                       description = :description,
-                      file_path = :file_path,
                       file_url = :file_url,
                       file_type = :file_type,
                       semester = :semester
@@ -116,7 +115,7 @@ class Material
 
         $stmt->bindParam(":title", $this->title);
         $stmt->bindParam(":description", $this->description);
-        $stmt->bindParam(":file_path", $this->file_path);
+        // $stmt->bindParam(":file_path", $this->file_path);
         $stmt->bindParam(":file_url", $this->file_url);
         $stmt->bindParam(":file_type", $this->file_type);
         $stmt->bindParam(":semester", $this->semester);

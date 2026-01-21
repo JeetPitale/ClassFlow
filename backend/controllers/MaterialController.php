@@ -157,7 +157,7 @@ class MaterialController
             $material->title = $data->title;
             // Handle null description safely
             $material->description = $data->description ?? '';
-            $material->file_path = $filePath;
+            // $material->file_path = $filePath; // Not used in DB
             $material->file_url = $fileUrl;
             $material->file_type = $fileType;
             $material->uploaded_by_teacher_id = $decoded['user_id'];
@@ -217,8 +217,8 @@ class MaterialController
         }
 
         // Handle File Update
-        $filePath = $existing['file_path'];
         $fileUrl = $existing['file_url'];
+        $filePath = realpath(__DIR__ . '/../') . $fileUrl; // Reconstruct path
         $fileType = $existing['file_type'];
 
         if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
@@ -232,8 +232,8 @@ class MaterialController
 
             if (move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
                 // Remove old file
-                if (file_exists($existing['file_path'])) {
-                    unlink($existing['file_path']);
+                if (file_exists($filePath)) {
+                    unlink($filePath);
                 }
                 $filePath = $targetPath;
                 $fileUrl = '/uploads/' . $fileName;
@@ -248,7 +248,7 @@ class MaterialController
         $material->id = $id;
         $material->title = $_POST['title'] ?? $existing['title'];
         $material->description = $_POST['description'] ?? $existing['description'];
-        $material->file_path = $filePath;
+        // $material->file_path = $filePath; // Not used in DB
         $material->file_url = $fileUrl;
         $material->file_type = $fileType;
         $material->semester = $_POST['semester'] ?? $existing['semester'];
@@ -318,8 +318,8 @@ class MaterialController
         }
 
         // 3. Verify File Exists
-        // $material['file_path'] should be the absolute server path from previous step
-        $filePath = $material['file_path'];
+        // $material['file_path'] might be missing from DB, reconstruct it
+        $filePath = realpath(__DIR__ . '/../') . $material['file_url'];
 
         if (!file_exists($filePath)) {
             // Try relative if absolute fails (backward compatibility)

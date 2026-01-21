@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import api from '@/services/api';
 
 const typeIcons = {
   pdf: FileText,
@@ -66,7 +67,10 @@ export default function StudentMaterials() {
       window.open(material.file_url, '_blank');
     } else {
       // Use the new download endpoint
-      const downloadUrl = `https://classflow-backend-jeet.azurewebsites.net/api/materials/${material.id}/download?token=${token}`;
+      // const downloadUrl = `https://classflow-backend-jeet.azurewebsites.net/api/materials/${material.id}/download?token=${token}`;
+
+      // Use dynamic base URL from our API configuration
+      const downloadUrl = `${api.defaults.baseURL}/materials/${material.id}/download?token=${token}`;
 
       // Open in new tab which will trigger the download prompt
       window.open(downloadUrl, '_blank');
@@ -127,7 +131,7 @@ export default function StudentMaterials() {
                       {(material.file_type || 'Unknown').toUpperCase()}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      {material.created_at ? format(new Date(material.created_at), 'MMM d') : ''}
+                      {material.created_at ? format(new Date(material.created_at + 'Z'), 'MMM d, yyyy h:mm a') : ''}
                     </span>
                   </div>
                   <Button size="sm" onClick={() => handleDownload(material)}>

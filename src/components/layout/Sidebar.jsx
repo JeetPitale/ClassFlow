@@ -130,7 +130,7 @@ export function Sidebar({ isOpen, onClose }) {
                 cn(
                   'sidebar-item',
                   isActive && 'sidebar-item-active',
-                  (item.label === 'Performance' || item.label === 'Materials') && 'opacity-50 pointer-events-none'
+                  (item.label === 'Performance') && 'opacity-50 pointer-events-none'
 
                 )
               }>

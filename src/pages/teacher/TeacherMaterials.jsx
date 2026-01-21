@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, FileText, Image, Music, Link, Trash2, Download } from 'lucide-react';
+import { Plus, FileText, Image, Music, Link, Trash2, Download, Pencil } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +38,7 @@ import {
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { materialAPI } from '@/services/api';
+import api, { materialAPI } from '@/services/api';
 
 const typeIcons = {
   pdf: FileText,
@@ -74,7 +74,9 @@ export default function TeacherMaterials() {
   const [loading, setLoading] = useState(true);
   const { token } = useAuth();
 
+
   const [materialToDelete, setMaterialToDelete] = useState(null);
+  const [editingMaterial, setEditingMaterial] = useState(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -92,14 +94,9 @@ export default function TeacherMaterials() {
 
   const fetchMaterials = async () => {
     try {
-      const response = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/materials', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      if (data.success) {
-        setMaterials(data.data);
+      const response = await api.get('/materials');
+      if (response.data.success) {
+        setMaterials(response.data.data);
       }
     } catch (error) {
       console.error('Failed to fetch materials:', error);
@@ -134,6 +131,36 @@ export default function TeacherMaterials() {
     setSelectedFiles(files);
   };
 
+  const handleDownload = (material) => {
+    if (material.file_type === 'link') {
+      window.open(material.file_url, '_blank');
+    } else {
+      const downloadUrl = `${api.defaults.baseURL}/materials/${material.id}/download?token=${token}`;
+      window.open(downloadUrl, '_blank');
+      toast({ title: 'Download Started', description: `Downloading ${material.title}...` });
+    }
+  };
+
+  const openCreateDialog = () => {
+    setEditingMaterial(null);
+    setFormData({ title: '', description: '', type: 'pdf', url: '', semester: '1' });
+    setSelectedFiles([]);
+    setIsDialogOpen(true);
+  }
+
+  const handleEdit = (material) => {
+    setEditingMaterial(material);
+    setFormData({
+      title: material.title,
+      description: material.description,
+      type: material.file_type,
+      url: material.file_type === 'link' ? material.file_url : '',
+      semester: material.semester.toString()
+    });
+    setSelectedFiles([]);
+    setIsDialogOpen(true);
+  };
+
   const handleSubmit = async () => {
     if (!formData.title) {
       toast({ title: 'Error', description: 'Please enter a title', variant: 'destructive' });
@@ -150,32 +177,45 @@ export default function TeacherMaterials() {
       formDataToSend.append('description', formData.description);
       formDataToSend.append('semester', formData.semester);
 
-      // ... (inside handleSubmit)
-
       if (formData.type === 'link') {
         formDataToSend.append('file_path', formData.url);
         formDataToSend.append('file_type', 'link');
       } else if (selectedFiles.length > 0) {
         formDataToSend.append('file', selectedFiles[0]);
-      } else {
+      } else if (!editingMaterial) {
+        // Require file on create
         toast({ title: 'Error', description: 'Please select a file or enter a URL', variant: 'destructive' });
         return;
       }
 
-      const response = await materialAPI.create(formDataToSend);
+      let response;
+      if (editingMaterial) {
+        response = await api.post(`/materials/${editingMaterial.id}/update`, formDataToSend);
+      } else {
+        response = await materialAPI.create(formDataToSend);
+      }
 
       if (response.data.success) {
-        setMaterials([response.data.data, ...materials]);
+        if (editingMaterial) {
+          setMaterials(materials.map(m => m.id === editingMaterial.id ? { ...m, ...formData, ...response.data.data } : m));
+          // Fetch fresh to be sure (optional)
+          fetchMaterials();
+          toast({ title: 'Success', description: 'Material updated successfully' });
+        } else {
+          setMaterials([response.data.data, ...materials]);
+          toast({ title: 'Success', description: 'Material uploaded successfully' });
+        }
+
         setFormData({ title: '', description: '', type: 'pdf', url: '', semester: '1' });
         setSelectedFiles([]);
+        setEditingMaterial(null);
         setIsDialogOpen(false);
-        toast({ title: 'Success', description: 'Material uploaded successfully' });
       } else {
-        toast({ title: 'Error', description: response.data.message || 'Failed to upload', variant: 'destructive' });
+        toast({ title: 'Error', description: response.data.message || 'Failed to save', variant: 'destructive' });
       }
     } catch (error) {
       console.error(error);
-      toast({ title: 'Error', description: error.response?.data?.message || 'Failed to upload material', variant: 'destructive' });
+      toast({ title: 'Error', description: error.response?.data?.message || 'Failed to save material', variant: 'destructive' });
     }
   };
 
@@ -183,15 +223,9 @@ export default function TeacherMaterials() {
     if (!materialToDelete) return;
 
     try {
-      const response = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/materials/${materialToDelete}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await api.delete(`/materials/${materialToDelete}`);
 
-      const data = await response.json();
-      if (data.success) {
+      if (response.data.success) {
         setMaterials(materials.filter((m) => m.id !== materialToDelete));
         toast({ title: 'Success', description: 'Material deleted' });
       } else {
@@ -210,7 +244,7 @@ export default function TeacherMaterials() {
         title="Course Materials"
         description="Upload and manage learning materials for your students"
         action={
-          <Button onClick={() => setIsDialogOpen(true)}>
+          <Button onClick={openCreateDialog}>
             <Plus className="w-4 h-4 mr-2" />
             Upload Material
           </Button>
@@ -265,7 +299,7 @@ export default function TeacherMaterials() {
                           {(material.file_type || 'Unknown').toUpperCase()}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          {material.created_at ? format(new Date(material.created_at), 'MMM d, yyyy') : ''}
+                          {material.created_at ? format(new Date(material.created_at + 'Z'), 'MMM d, yyyy h:mm a') : ''}
                         </span>
                       </div>
                     </div>
@@ -274,10 +308,20 @@ export default function TeacherMaterials() {
                     <span className="text-xs text-muted-foreground flex-1">
                       Uploaded by: {material.teacher_name || 'Unknown'}
                     </span>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleDownload(material)}>
                       <Download className="w-4 h-4 mr-2" />
                       Download
                     </Button>
+                    {/* Edit Button */}
+                    {(token && (JSON.parse(atob(token.split('.')[1])).role === 'admin' || String(JSON.parse(atob(token.split('.')[1])).user_id) === String(material.uploaded_by_teacher_id))) && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground hover:text-primary"
+                        onClick={() => handleEdit(material)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    )}
                     {/* Only show delete if user is admin or owner */}
                     {/* Note: We need user from context. Assuming useAuth provides { user } */}
                     {(token && (JSON.parse(atob(token.split('.')[1])).role === 'admin' || String(JSON.parse(atob(token.split('.')[1])).user_id) === String(material.uploaded_by_teacher_id))) && (
@@ -317,9 +361,9 @@ export default function TeacherMaterials() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Upload Material</DialogTitle>
+            <DialogTitle>{editingMaterial ? 'Edit Material' : 'Upload Material'}</DialogTitle>
             <DialogDescription>
-              Upload course materials for your students to access.
+              {editingMaterial ? 'Update material details.' : 'Upload course materials for your students to access.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -405,7 +449,7 @@ export default function TeacherMaterials() {
               Cancel
             </Button>
             <Button onClick={handleSubmit}>
-              Upload Material
+              {editingMaterial ? 'Update Material' : 'Upload Material'}
             </Button>
           </DialogFooter>
         </DialogContent>
