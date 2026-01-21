@@ -265,7 +265,7 @@ class MaterialController
         $material->semester = $_POST['semester'] ?? $existing['semester'];
 
         if ($material->update()) {
-            Response::success(null, 'Material updated successfully');
+            Response::success($material->findById($id), 'Material updated successfully');
         } else {
             Response::error('Failed to update material');
         }
