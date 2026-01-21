@@ -343,14 +343,16 @@ class MaterialController
             }
         }
 
-        // 4. Force Download Headers
+        // 4. Force Download/View Headers
         $fileName = basename($filePath);
         // Clean filename for header
         $downloadName = preg_replace('/[^a-zA-Z0-9.\-_]/', '_', $material['title']) . '.' . pathinfo($filePath, PATHINFO_EXTENSION);
 
+        $disposition = (isset($_GET['inline']) && $_GET['inline'] === 'true') ? 'inline' : 'attachment';
+
         header('Content-Description: File Transfer');
-        header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename="' . $downloadName . '"');
+        header('Content-Type: ' . (mime_content_type($filePath) ?: 'application/octet-stream'));
+        header('Content-Disposition: ' . $disposition . '; filename="' . $downloadName . '"');
         header('Expires: 0');
         header('Cache-Control: must-revalidate');
         header('Pragma: public');
