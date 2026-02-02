@@ -8,4 +8,4 @@ if [ -f "backend/.env" ]; then
     export $(grep -v '^#' backend/.env | xargs)
 fi
 
-php -S localhost:8000 -t backend
+php -S localhost:8000 -t backend backend/index.php

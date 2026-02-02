@@ -42,6 +42,15 @@ require_once __DIR__ . '/utils/RateLimiter.php';
 // Enable Rate Limiting to prevent crashes
 RateLimiter::handle();
 
+// Handle Static Files for PHP Built-in Server
+if (php_sapi_name() === 'cli-server') {
+    $path = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
+    $fullPath = __DIR__ . $path;
+    if (is_file($fullPath)) {
+        return false; // Let PHP serve the file directly
+    }
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = str_replace('/backend', '', str_replace('/index.php', '', $uri));
