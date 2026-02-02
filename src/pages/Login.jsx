@@ -212,7 +212,7 @@ export default function Login() {
                 <button
                   type="button"
                   className="text-sm text-primary hover:underline"
-                  onClick={() => toast.info('To Reset Password Contact Jeet Pitale')}>
+                  onClick={() => toast.info('To Reset Password Contact Admin')}>
 
                   Forgot password?
                 </button>
