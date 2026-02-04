@@ -481,10 +481,9 @@ export default function TeacherAssignments() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Class List / Grading Dialog */}
       <Dialog open={isGradingOpen} onOpenChange={setIsGradingOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
-          <DialogHeader className="flex flex-row items-center justify-between pr-8">
+        <DialogContent className="max-w-4xl max-h-[90vh] h-[80vh] flex flex-col overflow-hidden">
+          <DialogHeader className="flex flex-row items-center justify-between pr-8 border-b pb-4">
             <div>
               <DialogTitle>Class List: {selectedAssignment?.title}</DialogTitle>
               <DialogDescription>
@@ -501,7 +500,7 @@ export default function TeacherAssignments() {
               <option value="pending">Pending</option>
             </select>
           </DialogHeader>
-          <ScrollArea className="flex-1 pr-4">
+          <ScrollArea className="flex-1 mt-4 px-1">
             <div className="space-y-4">
               {students.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">No students in this semester.</div>
