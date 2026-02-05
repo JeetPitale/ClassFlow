@@ -44,8 +44,11 @@ class StudentController
 
         // Validate required fields
         if (
-            !isset($data->name) || !isset($data->email) || !isset($data->password) ||
-            !isset($data->enrollment_no) || !isset($data->semester)
+            !isset($data->name) || empty(trim($data->name)) ||
+            !isset($data->email) || empty(trim($data->email)) ||
+            !isset($data->password) || empty(trim($data->password)) ||
+            !isset($data->enrollment_no) || empty(trim($data->enrollment_no)) ||
+            !isset($data->semester) || empty($data->semester)
         ) {
             Response::validationError([
                 'name' => 'Name is required',
@@ -53,7 +56,7 @@ class StudentController
                 'password' => 'Password is required',
                 'enrollment_no' => 'Enrollment number is required',
                 'semester' => 'Semester is required'
-            ]);
+            ], 'All required fields must be filled');
         }
 
         $student = new Student();
@@ -61,6 +64,11 @@ class StudentController
         // Check if email already exists
         if ($student->findByEmail($data->email)) {
             Response::error('Email already exists', 409);
+        }
+
+        // Check if enrollment number already exists
+        if ($student->findByEnrollmentNo($data->enrollment_no)) {
+            Response::error('Enrollment number already exists', 409);
         }
 
         // Set student properties
@@ -75,11 +83,21 @@ class StudentController
         $student->semester = $data->semester;
         $student->department = isset($data->department) ? $data->department : null;
 
-        if ($student->create()) {
-            $studentData = $student->findById($student->id);
-            Response::success($studentData, 'Student created successfully', 201);
-        } else {
-            Response::error('Failed to create student');
+        try {
+            if ($student->create()) {
+                $studentData = $student->findById($student->id);
+                Response::success($studentData, 'Student created successfully', 201);
+            } else {
+                Response::error('Failed to create student');
+            }
+        } catch (PDOException $e) {
+            // Check for duplicate entry error if not caught by manual checks
+            if ($e->getCode() == 23000) {
+                Response::error('Duplicate entry: Email or Enrollment Number already exists', 409);
+            }
+            Response::error('Database error: ' . $e->getMessage(), 500);
+        } catch (Exception $e) {
+            Response::serverError($e->getMessage());
         }
     }
 
@@ -114,11 +132,20 @@ class StudentController
             $student->password_hash = $data->password;
         }
 
-        if ($student->update()) {
-            $updatedStudent = $student->findById($id);
-            Response::success($updatedStudent, 'Student updated successfully');
-        } else {
-            Response::error('Failed to update student');
+        try {
+            if ($student->update()) {
+                $updatedStudent = $student->findById($id);
+                Response::success($updatedStudent, 'Student updated successfully');
+            } else {
+                Response::error('Failed to update student');
+            }
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) {
+                Response::error('Duplicate entry: Email or Enrollment Number already exists', 409);
+            }
+            Response::error('Database error: ' . $e->getMessage(), 500);
+        } catch (Exception $e) {
+            Response::serverError($e->getMessage());
         }
     }
 

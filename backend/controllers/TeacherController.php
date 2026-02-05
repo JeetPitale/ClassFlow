@@ -42,13 +42,17 @@ class TeacherController
     {
         $data = json_decode(file_get_contents("php://input"));
 
-        //Validate required fields
-        if (!isset($data->name) || !isset($data->email) || !isset($data->password)) {
+        // Validate required fields
+        if (
+            !isset($data->name) || empty(trim($data->name)) ||
+            !isset($data->email) || empty(trim($data->email)) ||
+            !isset($data->password) || empty(trim($data->password))
+        ) {
             Response::validationError([
                 'name' => 'Name is required',
                 'email' => 'Email is required',
                 'password' => 'Password is required'
-            ]);
+            ], 'All required fields must be filled');
         }
 
         $teacher = new Teacher();
@@ -70,11 +74,20 @@ class TeacherController
         $teacher->qualification = isset($data->qualification) ? $data->qualification : null;
         $teacher->experience_years = isset($data->experience_years) ? $data->experience_years : null;
 
-        if ($teacher->create()) {
-            $teacherData = $teacher->findById($teacher->id);
-            Response::success($teacherData, 'Teacher created successfully', 201);
-        } else {
-            Response::error('Failed to create teacher');
+        try {
+            if ($teacher->create()) {
+                $teacherData = $teacher->findById($teacher->id);
+                Response::success($teacherData, 'Teacher created successfully', 201);
+            } else {
+                Response::error('Failed to create teacher');
+            }
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) {
+                Response::error('Duplicate entry: Email already exists', 409);
+            }
+            Response::error('Database error: ' . $e->getMessage(), 500);
+        } catch (Exception $e) {
+            Response::serverError($e->getMessage());
         }
     }
 

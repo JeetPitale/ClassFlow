@@ -96,6 +96,20 @@ class Student
     }
 
     /**
+     * Find student by enrollment number
+     */
+    public function findByEnrollmentNo($enrollment_no)
+    {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE enrollment_no = :enrollment_no LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":enrollment_no", $enrollment_no);
+        $stmt->execute();
+
+        return $stmt->fetch();
+    }
+
+    /**
      * Create new student
      */
     public function create()

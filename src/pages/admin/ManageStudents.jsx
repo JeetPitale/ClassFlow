@@ -106,8 +106,14 @@ export default function ManageStudents() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.name || !formData.email || (!editingStudent && !formData.password)) {
-      toast.error('Please fill in all required fields');
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.enrollment_no ||
+      !formData.semester ||
+      (!editingStudent && !formData.password)
+    ) {
+      toast.error('Please fill in all required fields (Name, Email, Enrollment No, Semester, Password)');
       return;
     }
 
