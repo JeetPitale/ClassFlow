@@ -29,6 +29,7 @@ export default function ManageTeachers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -69,6 +70,7 @@ export default function ManageTeachers() {
   );
 
   const handleOpenDialog = (teacher) => {
+    setFormErrors({});
     if (teacher) {
       setEditingTeacher(teacher);
       setFormData({
@@ -101,9 +103,32 @@ export default function ManageTeachers() {
     setIsDialogOpen(true);
   };
 
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.name) errors.name = 'Full name is required';
+    if (!formData.email) errors.email = 'Email address is required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Email address is invalid';
+
+    if (!editingTeacher && !formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password && formData.password.length && formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData({ ...formData, [field]: value });
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: null }));
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!formData.name || !formData.email || (!editingTeacher && !formData.password)) {
-      toast.error('Please fill in all required fields');
+    if (!validateForm()) {
+      toast.error('Please fix the errors in the form');
       return;
     }
 
@@ -114,6 +139,7 @@ export default function ManageTeachers() {
         if (response.data.success) {
           toast.success('Teacher updated successfully');
           fetchTeachers();
+          setIsDialogOpen(false);
         }
       } else {
         // Create new teacher
@@ -121,12 +147,17 @@ export default function ManageTeachers() {
         if (response.data.success) {
           toast.success('Teacher added successfully');
           fetchTeachers();
+          setIsDialogOpen(false);
         }
       }
-      setIsDialogOpen(false);
     } catch (error) {
       console.error('Error saving teacher:', error);
-      toast.error(error.response?.data?.message || 'Failed to save teacher');
+      const message = error.response?.data?.message || 'Failed to save teacher';
+      toast.error(message);
+
+      if (error.response?.status === 409) {
+        setFormErrors(prev => ({ ...prev, email: 'Email already exists' }));
+      }
     }
   };
 
@@ -275,37 +306,43 @@ export default function ManageTeachers() {
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name *</Label>
+                <Label htmlFor="name" className={formErrors.name ? "text-destructive" : ""}>Full Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
                   placeholder="John Doe"
+                  className={formErrors.name ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
+                {formErrors.name && <p className="text-xs text-destructive mt-1">{formErrors.name}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email" className={formErrors.email ? "text-destructive" : ""}>Email *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="john@teacher.com"
+                  className={formErrors.email ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
+                {formErrors.email && <p className="text-xs text-destructive mt-1">{formErrors.email}</p>}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">
+              <Label htmlFor="password" className={formErrors.password ? "text-destructive" : ""}>
                 {editingTeacher ? 'Password (leave blank to keep current)' : 'Password *'}
               </Label>
               <Input
                 id="password"
                 type="password"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) => handleInputChange('password', e.target.value)}
                 placeholder={editingTeacher ? "Enter new password" : "Enter password"}
+                className={formErrors.password ? "border-destructive focus-visible:ring-destructive" : ""}
               />
+              {formErrors.password && <p className="text-xs text-destructive mt-1">{formErrors.password}</p>}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -314,7 +351,7 @@ export default function ManageTeachers() {
                 <Input
                   id="phone"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
                   placeholder="1234567890"
                 />
               </div>
@@ -324,7 +361,7 @@ export default function ManageTeachers() {
                   id="dob"
                   type="date"
                   value={formData.dob}
-                  onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                  onChange={(e) => handleInputChange('dob', e.target.value)}
                 />
               </div>
             </div>
@@ -336,7 +373,7 @@ export default function ManageTeachers() {
                   id="gender"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={formData.gender}
-                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  onChange={(e) => handleInputChange('gender', e.target.value)}
                 >
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
@@ -349,7 +386,7 @@ export default function ManageTeachers() {
                 <Input
                   id="subject"
                   value={formData.subject_specialization}
-                  onChange={(e) => setFormData({ ...formData, subject_specialization: e.target.value })}
+                  onChange={(e) => handleInputChange('subject_specialization', e.target.value)}
                   placeholder="e.g., Computer Science"
                 />
               </div>
@@ -361,7 +398,7 @@ export default function ManageTeachers() {
                 <Input
                   id="qualification"
                   value={formData.qualification}
-                  onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
+                  onChange={(e) => handleInputChange('qualification', e.target.value)}
                   placeholder="e.g., M.Tech, PhD"
                 />
               </div>
@@ -371,7 +408,7 @@ export default function ManageTeachers() {
                   id="experience"
                   type="number"
                   value={formData.experience_years}
-                  onChange={(e) => setFormData({ ...formData, experience_years: e.target.value })}
+                  onChange={(e) => handleInputChange('experience_years', e.target.value)}
                   placeholder="5"
                 />
               </div>
@@ -383,7 +420,7 @@ export default function ManageTeachers() {
                 id="address"
                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                onChange={(e) => handleInputChange('address', e.target.value)}
                 placeholder="Enter full address"
               />
             </div>

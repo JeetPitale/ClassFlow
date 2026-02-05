@@ -31,6 +31,7 @@ export default function ManageStudents() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -73,6 +74,7 @@ export default function ManageStudents() {
   );
 
   const handleOpenDialog = (student) => {
+    setFormErrors({});
     if (student) {
       setEditingStudent(student);
       setFormData({
@@ -105,15 +107,35 @@ export default function ManageStudents() {
     setIsDialogOpen(true);
   };
 
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.name) errors.name = 'Full name is required';
+    if (!formData.email) errors.email = 'Email address is required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Email address is invalid';
+
+    if (!formData.enrollment_no) errors.enrollment_no = 'Enrollment number is required';
+    if (!formData.semester) errors.semester = 'Semester is required';
+
+    if (!editingStudent && !formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password && formData.password.length && formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData({ ...formData, [field]: value });
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: null }));
+    }
+  };
+
   const handleSubmit = async () => {
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.enrollment_no ||
-      !formData.semester ||
-      (!editingStudent && !formData.password)
-    ) {
-      toast.error('Please fill in all required fields (Name, Email, Enrollment No, Semester, Password)');
+    if (!validateForm()) {
+      toast.error('Please fix the errors in the form');
       return;
     }
 
@@ -124,6 +146,7 @@ export default function ManageStudents() {
         if (response.data.success) {
           toast.success('Student updated successfully');
           fetchStudents();
+          setIsDialogOpen(false);
         }
       } else {
         // Create new student
@@ -131,12 +154,22 @@ export default function ManageStudents() {
         if (response.data.success) {
           toast.success('Student added successfully');
           fetchStudents();
+          setIsDialogOpen(false);
         }
       }
-      setIsDialogOpen(false);
     } catch (error) {
       console.error('Error saving student:', error);
-      toast.error(error.response?.data?.message || 'Failed to save student');
+      const message = error.response?.data?.message || 'Failed to save student';
+      toast.error(message);
+
+      if (error.response?.status === 409) {
+        if (message.toLowerCase().includes('email')) {
+          setFormErrors(prev => ({ ...prev, email: 'Email already exists' }));
+        }
+        if (message.toLowerCase().includes('enrollment')) {
+          setFormErrors(prev => ({ ...prev, enrollment_no: 'Enrollment number already exists' }));
+        }
+      }
     }
   };
 
@@ -316,63 +349,72 @@ export default function ManageStudents() {
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="enrollment_no">Enrollment Number *</Label>
+                <Label htmlFor="enrollment_no" className={formErrors.enrollment_no ? "text-destructive" : ""}>Enrollment Number *</Label>
                 <Input
                   id="enrollment_no"
                   value={formData.enrollment_no}
-                  onChange={(e) => setFormData({ ...formData, enrollment_no: e.target.value })}
+                  onChange={(e) => handleInputChange('enrollment_no', e.target.value)}
                   placeholder="ENR001"
+                  className={formErrors.enrollment_no ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
+                {formErrors.enrollment_no && <p className="text-xs text-destructive mt-1">{formErrors.enrollment_no}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="semester">Semester *</Label>
+                <Label htmlFor="semester" className={formErrors.semester ? "text-destructive" : ""}>Semester *</Label>
                 <select
                   id="semester"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ${formErrors.semester ? "border-destructive focus-visible:ring-destructive" : ""}`}
                   value={formData.semester}
-                  onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
+                  onChange={(e) => handleInputChange('semester', e.target.value)}
                 >
                   <option value="">Select Semester</option>
                   {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
                     <option key={s} value={s}>Semester {s}</option>
                   ))}
                 </select>
+                {formErrors.semester && <p className="text-xs text-destructive mt-1">{formErrors.semester}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name *</Label>
+                <Label htmlFor="name" className={formErrors.name ? "text-destructive" : ""}>Full Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
                   placeholder="John Doe"
+                  className={formErrors.name ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
+                {formErrors.name && <p className="text-xs text-destructive mt-1">{formErrors.name}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email" className={formErrors.email ? "text-destructive" : ""}>Email *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="john@student.edu"
+                  className={formErrors.email ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
+                {formErrors.email && <p className="text-xs text-destructive mt-1">{formErrors.email}</p>}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">
+              <Label htmlFor="password" className={formErrors.password ? "text-destructive" : ""}>
                 {editingStudent ? 'Password (leave blank to keep current)' : 'Password *'}
               </Label>
               <Input
                 id="password"
                 type="password"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) => handleInputChange('password', e.target.value)}
                 placeholder={editingStudent ? "Enter new password" : "Enter password"}
+                className={formErrors.password ? "border-destructive focus-visible:ring-destructive" : ""}
               />
+              {formErrors.password && <p className="text-xs text-destructive mt-1">{formErrors.password}</p>}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -381,7 +423,7 @@ export default function ManageStudents() {
                 <Input
                   id="phone"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
                   placeholder="1234567890"
                 />
               </div>
@@ -391,7 +433,7 @@ export default function ManageStudents() {
                   id="dob"
                   type="date"
                   value={formData.dob}
-                  onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                  onChange={(e) => handleInputChange('dob', e.target.value)}
                 />
               </div>
             </div>
@@ -403,7 +445,7 @@ export default function ManageStudents() {
                   id="gender"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={formData.gender}
-                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  onChange={(e) => handleInputChange('gender', e.target.value)}
                 >
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
@@ -416,7 +458,7 @@ export default function ManageStudents() {
                 <Input
                   id="department"
                   value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                  onChange={(e) => handleInputChange('department', e.target.value)}
                   placeholder="Computer Science"
                 />
               </div>
@@ -428,7 +470,7 @@ export default function ManageStudents() {
                 id="address"
                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                onChange={(e) => handleInputChange('address', e.target.value)}
                 placeholder="Enter full address"
               />
             </div>
