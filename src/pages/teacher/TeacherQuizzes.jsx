@@ -260,11 +260,14 @@ export default function TeacherQuizzes() {
 
     const currentTotalMarks = selectedQuiz.questions.reduce((sum, q) => {
       if (editingQuestion && q.id === editingQuestion.id) return sum;
-      return sum + (q.marks || 0);
+      return sum + parseInt(q.marks || 0, 10);
     }, 0);
 
-    if (currentTotalMarks + questionFormData.marks > selectedQuiz.maxMarks) {
-      toast({ title: 'Error', description: `Total marks cannot exceed quiz max marks (${selectedQuiz.maxMarks})`, variant: 'destructive' });
+    const quizMaxMarks = parseInt(selectedQuiz.maxMarks || 25, 10);
+    const incomingMarks = parseInt(questionFormData.marks || 0, 10);
+
+    if (currentTotalMarks + incomingMarks > quizMaxMarks) {
+      toast({ title: 'Error', description: `Total marks cannot exceed quiz max marks (${quizMaxMarks})`, variant: 'destructive' });
       return;
     }
 
@@ -417,9 +420,17 @@ export default function TeacherQuizzes() {
       return;
     }
 
-    const currentTotalMarks = selectedQuiz.questions.reduce((sum, q) => sum + (q.marks || 0), 0);
-    if (currentTotalMarks > selectedQuiz.maxMarks) {
-      toast({ title: 'Error', description: `Total marks cannot exceed quiz max marks (${selectedQuiz.maxMarks})`, variant: 'destructive' });
+    const currentTotalMarks = selectedQuiz.questions.reduce((sum, q) => {
+      // Exclude the currently editing question to avoid double counting its marks
+      if (q.id === question.id) return sum;
+      return sum + parseInt(q.marks || 0, 10);
+    }, 0);
+
+    const quizMaxMarks = parseInt(selectedQuiz.maxMarks || 25, 10);
+    const newQuestionMarks = parseInt(question.marks || 0, 10);
+
+    if (currentTotalMarks + newQuestionMarks > quizMaxMarks) {
+      toast({ title: 'Error', description: `Total marks cannot exceed quiz max marks (${quizMaxMarks})`, variant: 'destructive' });
       return;
     }
 
@@ -471,14 +482,15 @@ export default function TeacherQuizzes() {
             question: q.question,
             options: q.options || [],
             correctAnswer: q.correctAnswer || 0,
-            marks: q.marks || 5
+            marks: parseInt(q.marks || 5, 10)
           }));
 
-          const parsedTotalMarks = questions.reduce((sum, q) => sum + (q.marks || 0), 0);
-          const currentTotalMarks = selectedQuiz.questions.reduce((sum, q) => sum + (q.marks || 0), 0);
+          const parsedTotalMarks = questions.reduce((sum, q) => sum + parseInt(q.marks || 0, 10), 0);
+          const currentTotalMarks = selectedQuiz.questions.reduce((sum, q) => sum + parseInt(q.marks || 0, 10), 0);
+          const quizMaxMarks = parseInt(selectedQuiz.maxMarks || 25, 10);
 
-          if (currentTotalMarks + parsedTotalMarks > selectedQuiz.maxMarks) {
-            toast({ title: 'Error', description: `Total marks will exceed quiz max marks (${selectedQuiz.maxMarks}). Imported questions have ${parsedTotalMarks} marks.`, variant: 'destructive' });
+          if (currentTotalMarks + parsedTotalMarks > quizMaxMarks) {
+            toast({ title: 'Error', description: `Total marks will exceed quiz max marks (${quizMaxMarks}). Imported questions have ${parsedTotalMarks} marks.`, variant: 'destructive' });
             return;
           }
         } else if (file.name.endsWith('.csv')) {
@@ -589,11 +601,12 @@ export default function TeacherQuizzes() {
               });
 
               if (parsedQuestions.length > 0) {
-                const parsedTotalMarks = parsedQuestions.reduce((sum, q) => sum + (q.marks || 0), 0);
-                const currentTotalMarks = selectedQuiz.questions.reduce((sum, q) => sum + (q.marks || 0), 0);
+                const parsedTotalMarks = parsedQuestions.reduce((sum, q) => sum + parseInt(q.marks || 0, 10), 0);
+                const currentTotalMarks = selectedQuiz.questions.reduce((sum, q) => sum + parseInt(q.marks || 0, 10), 0);
+                const quizMaxMarks = parseInt(selectedQuiz.maxMarks || 25, 10);
 
-                if (currentTotalMarks + parsedTotalMarks > selectedQuiz.maxMarks) {
-                  toast({ title: 'Error', description: `Total marks will exceed quiz max marks (${selectedQuiz.maxMarks}).`, variant: 'destructive' });
+                if (currentTotalMarks + parsedTotalMarks > quizMaxMarks) {
+                  toast({ title: 'Error', description: `Total marks will exceed quiz max marks (${quizMaxMarks}).`, variant: 'destructive' });
                   return;
                 }
 
