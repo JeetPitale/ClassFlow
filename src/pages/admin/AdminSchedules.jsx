@@ -207,7 +207,6 @@ export default function AdminSchedules() {
                 schedule_time: '',
                 location: '',
                 type: 'class',
-                type: 'class',
                 target_audience: 'Everyone'
               });
               setAudienceType('Everyone');

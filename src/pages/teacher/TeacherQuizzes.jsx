@@ -258,6 +258,16 @@ export default function TeacherQuizzes() {
       return;
     }
 
+    const currentTotalMarks = selectedQuiz.questions.reduce((sum, q) => {
+      if (editingQuestion && q.id === editingQuestion.id) return sum;
+      return sum + (q.marks || 0);
+    }, 0);
+
+    if (currentTotalMarks + questionFormData.marks > selectedQuiz.maxMarks) {
+      toast({ title: 'Error', description: `Total marks cannot exceed quiz max marks (${selectedQuiz.maxMarks})`, variant: 'destructive' });
+      return;
+    }
+
     try {
       let url, method, body;
 
@@ -406,6 +416,13 @@ export default function TeacherQuizzes() {
       toast({ title: 'Error', description: 'Marks must be positive', variant: 'destructive' });
       return;
     }
+
+    const currentTotalMarks = selectedQuiz.questions.reduce((sum, q) => sum + (q.marks || 0), 0);
+    if (currentTotalMarks > selectedQuiz.maxMarks) {
+      toast({ title: 'Error', description: `Total marks cannot exceed quiz max marks (${selectedQuiz.maxMarks})`, variant: 'destructive' });
+      return;
+    }
+
     try {
       const url = `https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${selectedQuiz.id}/questions/${question.id}`;
       const body = JSON.stringify({
@@ -456,6 +473,14 @@ export default function TeacherQuizzes() {
             correctAnswer: q.correctAnswer || 0,
             marks: q.marks || 5
           }));
+
+          const parsedTotalMarks = questions.reduce((sum, q) => sum + (q.marks || 0), 0);
+          const currentTotalMarks = selectedQuiz.questions.reduce((sum, q) => sum + (q.marks || 0), 0);
+
+          if (currentTotalMarks + parsedTotalMarks > selectedQuiz.maxMarks) {
+            toast({ title: 'Error', description: `Total marks will exceed quiz max marks (${selectedQuiz.maxMarks}). Imported questions have ${parsedTotalMarks} marks.`, variant: 'destructive' });
+            return;
+          }
         } else if (file.name.endsWith('.csv')) {
           // Use PapaParse for robust CSV parsing
           Papa.parse(file, {
@@ -564,6 +589,14 @@ export default function TeacherQuizzes() {
               });
 
               if (parsedQuestions.length > 0) {
+                const parsedTotalMarks = parsedQuestions.reduce((sum, q) => sum + (q.marks || 0), 0);
+                const currentTotalMarks = selectedQuiz.questions.reduce((sum, q) => sum + (q.marks || 0), 0);
+
+                if (currentTotalMarks + parsedTotalMarks > selectedQuiz.maxMarks) {
+                  toast({ title: 'Error', description: `Total marks will exceed quiz max marks (${selectedQuiz.maxMarks}).`, variant: 'destructive' });
+                  return;
+                }
+
                 // Send to backend
                 fetch(`https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${selectedQuiz.id}/questions/bulk`, {
                   method: 'POST',
