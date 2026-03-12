@@ -224,7 +224,8 @@ export default function TeacherQuizzes() {
       let finalScheduledAt = null;
       if (quizFormData.scheduledDate && quizFormData.scheduledTime) {
         // Create local datetime string and convert it if needed, or send standard ISO string
-        finalScheduledAt = new Date(`${quizFormData.scheduledDate}T${quizFormData.scheduledTime}`).toISOString();
+        // Format for MySQL datetime: YYYY-MM-DD HH:MM:SS in UTC
+        finalScheduledAt = new Date(`${quizFormData.scheduledDate}T${quizFormData.scheduledTime}`).toISOString().slice(0, 19).replace('T', ' ');
       }
 
       const payload = {

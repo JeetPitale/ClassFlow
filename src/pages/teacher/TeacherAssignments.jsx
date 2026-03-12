@@ -233,10 +233,16 @@ export default function TeacherAssignments() {
     const data = new FormData();
     data.append('title', formData.title);
     data.append('description', formData.description);
-    data.append('due_date', formData.dueDate);
+    const formatForMySQL = (isoStr) => {
+      if (!isoStr) return '';
+      // Handle value from datetime-local input (YYYY-MM-DDTHH:MM)
+      return isoStr.includes('T') ? isoStr.replace('T', ' ') + ':00' : isoStr;
+    };
+
+    data.append('due_date', formatForMySQL(formData.dueDate));
     data.append('total_marks', formData.maxMarks);
     data.append('semester', formData.semester);
-    if (formData.scheduledAt) data.append('scheduled_at', formData.scheduledAt);
+    if (formData.scheduledAt) data.append('scheduled_at', formatForMySQL(formData.scheduledAt));
 
     // Append the last uploaded file (assuming single file upload for now based on backend)
     // The UI processes multiple but we'll take the latest one for the attachment field
@@ -263,10 +269,10 @@ export default function TeacherAssignments() {
         await assignmentAPI.update(editingAssignment.id, {
           title: formData.title,
           description: formData.description,
-          due_date: formData.dueDate,
+          due_date: formatForMySQL(formData.dueDate),
           total_marks: formData.maxMarks,
           semester: formData.semester,
-          scheduled_at: formData.scheduledAt
+          scheduled_at: formatForMySQL(formData.scheduledAt)
         });
         toast({ title: 'Success', description: 'Assignment updated' });
       } else {
