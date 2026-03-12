@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Plus, BookOpen, Clock, Award, Users, Pencil, Trash2, Upload, History, ListPlus, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, BookOpen, Clock, Award, Users, Pencil, Trash2, Upload, History, ListPlus, CheckCircle, XCircle, Calendar as CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -972,13 +975,38 @@ export default function TeacherQuizzes() {
             </div>
             <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="scheduledDate">Publish Date (Optional)</Label>
-                <Input
-                  id="scheduledDate"
-                  type="date"
-                  min={new Date().toISOString().split('T')[0]}
-                  value={quizFormData.scheduledDate}
-                  onChange={(e) => setQuizFormData({ ...quizFormData, scheduledDate: e.target.value, scheduledTime: quizFormData.scheduledTime || '09:00' })} />
+                <Label>Publish Date (Optional)</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !quizFormData.scheduledDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {quizFormData.scheduledDate ? format(new Date(quizFormData.scheduledDate + 'T00:00:00'), "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={quizFormData.scheduledDate ? new Date(quizFormData.scheduledDate + 'T00:00:00') : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setQuizFormData({
+                            ...quizFormData,
+                            scheduledDate: format(date, 'yyyy-MM-dd'),
+                            scheduledTime: quizFormData.scheduledTime || '09:00'
+                          });
+                        }
+                      }}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="scheduledTime">Publish Time</Label>
@@ -991,12 +1019,12 @@ export default function TeacherQuizzes() {
                     <SelectValue placeholder="Select Time" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Array.from({ length: 48 }).map((_, i) => {
-                      const hour = Math.floor(i / 2).toString().padStart(2, '0');
-                      const min = i % 2 === 0 ? '00' : '30';
+                    {Array.from({ length: 288 }).map((_, i) => {
+                      const hour = Math.floor(i / 12).toString().padStart(2, '0');
+                      const min = ((i % 12) * 5).toString().padStart(2, '0');
                       const timeValue = `${hour}:${min}`;
-                      const displayHour = Math.floor(i / 2) % 12 || 12;
-                      const ampm = Math.floor(i / 2) >= 12 ? 'PM' : 'AM';
+                      const displayHour = Math.floor(i / 12) % 12 || 12;
+                      const ampm = Math.floor(i / 12) >= 12 ? 'PM' : 'AM';
                       return (
                         <SelectItem key={timeValue} value={timeValue}>
                           {displayHour}:{min} {ampm}
