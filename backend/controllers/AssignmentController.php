@@ -78,6 +78,7 @@ class AssignmentController
         $assignment->total_marks = $_POST['total_marks'] ?? 100;
         $assignment->created_by_teacher_id = $decoded['user_id'];
         $assignment->semester = $_POST['semester'] ?? null;
+        $assignment->scheduled_at = !empty($_POST['scheduled_at']) ? date('Y-m-d H:i:s', strtotime($_POST['scheduled_at'])) : null;
         $assignment->attachment_path = null;
 
         // Handle File Upload
@@ -129,6 +130,7 @@ class AssignmentController
         $assignment->due_date = $due_date ?? $existing['due_date'];
         $assignment->total_marks = $_POST['total_marks'] ?? $existing['total_marks'];
         $assignment->semester = $_POST['semester'] ?? $existing['semester'];
+        $assignment->scheduled_at = isset($_POST['scheduled_at']) ? (!empty($_POST['scheduled_at']) ? date('Y-m-d H:i:s', strtotime($_POST['scheduled_at'])) : null) : $existing['scheduled_at'];
         $assignment->attachment_path = $existing['attachment_path']; // Default to existing
 
         // Handle File Upload if provided

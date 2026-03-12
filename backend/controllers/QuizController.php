@@ -64,7 +64,7 @@ class QuizController
             $quiz->total_marks = $data->maxMarks;
             $quiz->semester = $data->semester ?? 1;
             $quiz->created_by_teacher_id = $decoded['user_id'];
-            $quiz->scheduled_at = !empty($data->scheduledAt) ? $data->scheduledAt : null;
+            $quiz->scheduled_at = !empty($data->scheduledAt) ? date('Y-m-d H:i:s', strtotime($data->scheduledAt)) : null;
 
             if ($quiz->create()) {
                 Response::success(['id' => $quiz->id], 'Quiz created successfully', 201);
@@ -114,7 +114,7 @@ class QuizController
         $quiz->duration_minutes = $data->duration ?? $existing['duration_minutes'];
         $quiz->total_marks = $data->maxMarks ?? $existing['total_marks'];
         $quiz->semester = $data->semester ?? $existing['semester'];
-        $quiz->scheduled_at = isset($data->scheduledAt) ? (!empty($data->scheduledAt) ? $data->scheduledAt : null) : $existing['scheduled_at'];
+        $quiz->scheduled_at = isset($data->scheduledAt) ? (!empty($data->scheduledAt) ? date('Y-m-d H:i:s', strtotime($data->scheduledAt)) : null) : $existing['scheduled_at'];
 
         if ($quiz->update()) {
             Response::success(null, 'Quiz updated successfully');
