@@ -65,7 +65,8 @@ export default function TeacherQuizzes() {
     duration: 30,
     maxMarks: 25,
     semester: '1',
-    scheduledAt: ''
+    scheduledDate: '',
+    scheduledTime: ''
   });
 
   const [questionFormData, setQuestionFormData] = useState({
@@ -76,7 +77,7 @@ export default function TeacherQuizzes() {
   });
 
   const resetQuizForm = () => {
-    setQuizFormData({ title: '', description: '', duration: 30, maxMarks: 25, semester: '1', scheduledAt: '' });
+    setQuizFormData({ title: '', description: '', duration: 30, maxMarks: 25, semester: '1', scheduledDate: '', scheduledTime: '' });
     setEditingQuiz(null);
   };
 
@@ -92,13 +93,18 @@ export default function TeacherQuizzes() {
 
   const handleOpenEditQuiz = (quiz) => {
     setEditingQuiz(quiz);
+    const scheduledFields = quiz.scheduled_at ? {
+      scheduledDate: new Date(quiz.scheduled_at).toISOString().split('T')[0],
+      scheduledTime: new Date(quiz.scheduled_at).toTimeString().slice(0, 5) // "HH:MM"
+    } : { scheduledDate: '', scheduledTime: '' };
+
     setQuizFormData({
       title: quiz.title || '',
       description: quiz.description || '',
       duration: quiz.duration || 30,
       maxMarks: quiz.maxMarks || 25,
       semester: quiz.semester ? quiz.semester.toString() : '1',
-      scheduledAt: quiz.scheduled_at || ''
+      ...scheduledFields
     });
     setIsQuizDialogOpen(true);
   };
@@ -193,6 +199,18 @@ export default function TeacherQuizzes() {
       return;
     }
 
+    if (quizFormData.scheduledDate || quizFormData.scheduledTime) {
+      if (!quizFormData.scheduledDate || !quizFormData.scheduledTime) {
+        toast({ title: 'Error', description: 'Please provide both date and time for scheduling', variant: 'destructive' });
+        return;
+      }
+      const scheduledDateTime = new Date(`${quizFormData.scheduledDate}T${quizFormData.scheduledTime}`);
+      if (scheduledDateTime < new Date()) {
+        toast({ title: 'Error', description: 'Selected date and time cannot be in the past', variant: 'destructive' });
+        return;
+      }
+    }
+
     try {
       const url = editingQuiz
         ? `https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${editingQuiz.id}`
@@ -200,13 +218,19 @@ export default function TeacherQuizzes() {
 
       const method = editingQuiz ? 'PUT' : 'POST';
 
+      let finalScheduledAt = null;
+      if (quizFormData.scheduledDate && quizFormData.scheduledTime) {
+        // Create local datetime string and convert it if needed, or send standard ISO string
+        finalScheduledAt = new Date(`${quizFormData.scheduledDate}T${quizFormData.scheduledTime}`).toISOString();
+      }
+
       const payload = {
         title: quizFormData.title,
         description: quizFormData.description,
         duration: quizFormData.duration,
         maxMarks: quizFormData.maxMarks,
         semester: quizFormData.semester,
-        scheduledAt: quizFormData.scheduledAt || null
+        scheduledAt: finalScheduledAt
       };
 
       const response = await fetch(url, {
@@ -926,7 +950,7 @@ export default function TeacherQuizzes() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-4 sm:grid sm:grid-cols-3">
+            <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="duration">Duration (mins)</Label>
                 <Input
@@ -944,15 +968,43 @@ export default function TeacherQuizzes() {
                   min="1"
                   value={quizFormData.maxMarks}
                   onChange={(e) => setQuizFormData({ ...quizFormData, maxMarks: parseInt(e.target.value) })} />
-
+              </div>
+            </div>
+            <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="scheduledDate">Publish Date (Optional)</Label>
+                <Input
+                  id="scheduledDate"
+                  type="date"
+                  min={new Date().toISOString().split('T')[0]}
+                  value={quizFormData.scheduledDate}
+                  onChange={(e) => setQuizFormData({ ...quizFormData, scheduledDate: e.target.value, scheduledTime: quizFormData.scheduledTime || '09:00' })} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="scheduledAt">Publish Date</Label>
-                <Input
-                  id="scheduledAt"
-                  type="datetime-local"
-                  value={quizFormData.scheduledAt}
-                  onChange={(e) => setQuizFormData({ ...quizFormData, scheduledAt: e.target.value })} />
+                <Label htmlFor="scheduledTime">Publish Time</Label>
+                <Select
+                  value={quizFormData.scheduledTime}
+                  onValueChange={(val) => setQuizFormData({ ...quizFormData, scheduledTime: val })}
+                  disabled={!quizFormData.scheduledDate}
+                >
+                  <SelectTrigger id="scheduledTime">
+                    <SelectValue placeholder="Select Time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 48 }).map((_, i) => {
+                      const hour = Math.floor(i / 2).toString().padStart(2, '0');
+                      const min = i % 2 === 0 ? '00' : '30';
+                      const timeValue = `${hour}:${min}`;
+                      const displayHour = Math.floor(i / 2) % 12 || 12;
+                      const ampm = Math.floor(i / 2) >= 12 ? 'PM' : 'AM';
+                      return (
+                        <SelectItem key={timeValue} value={timeValue}>
+                          {displayHour}:{min} {ampm}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
