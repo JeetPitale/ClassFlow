@@ -236,6 +236,18 @@ class Quiz
         return $stmt->fetchAll();
     }
 
+    public function getAllQuizAttempts()
+    {
+        $query = "SELECT qa.*, q.title as quiz_title, s.name as student_name, q.total_marks as max_marks
+                  FROM " . $this->attempts_table . " qa
+                  JOIN " . $this->table_name . " q ON qa.quiz_id = q.id
+                  JOIN students s ON qa.student_id = s.id
+                  ORDER BY qa.submitted_at DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     public function getTeacherQuizAttempts($teacher_id)
     {
         $query = "SELECT qa.*, q.title as quiz_title, s.name as student_name, q.total_marks as max_marks

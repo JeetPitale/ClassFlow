@@ -284,12 +284,17 @@ class QuizController
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 
-        if (!$decoded || $decoded['role'] !== 'teacher') {
+        if (!$decoded || ($decoded['role'] !== 'teacher' && $decoded['role'] !== 'admin')) {
             Response::forbidden('Access denied');
         }
 
         $quiz = new Quiz();
-        $attempts = $quiz->getTeacherQuizAttempts($decoded['user_id']); // user_id is teacher_id here
+
+        if ($decoded['role'] === 'admin') {
+            $attempts = $quiz->getAllQuizAttempts();
+        } else {
+            $attempts = $quiz->getTeacherQuizAttempts($decoded['user_id']);
+        }
         Response::success($attempts);
     }
     public static function bulkAddQuestions($quizId)
