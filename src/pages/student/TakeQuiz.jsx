@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, CheckCircle, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
@@ -33,6 +33,7 @@ export default function TakeQuiz() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const hasViolatedRef = useRef(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -127,6 +128,35 @@ export default function TakeQuiz() {
 
         return () => clearInterval(timer);
     }, [timeLeft]);
+
+    // Anti-cheat mechanism: Auto-submit if user changes tab or window
+    useEffect(() => {
+        const handleViolation = () => {
+            if (hasViolatedRef.current) return;
+            // Only trigger if quiz is actively being taken
+            if (quiz && !isSubmitting && timeLeft !== null && timeLeft > 0) {
+                hasViolatedRef.current = true;
+                toast({
+                    title: "Violation Detected",
+                    description: "You left the quiz tab. Your quiz has been automatically submitted.",
+                    variant: "destructive"
+                });
+                handleSubmit(true);
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) handleViolation();
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("blur", handleViolation);
+
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("blur", handleViolation);
+        };
+    }, [quiz, isSubmitting, timeLeft, answers]);
 
     const handleAnswerSelect = (optionIndex) => {
         setAnswers(prev => ({
