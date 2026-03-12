@@ -49,7 +49,7 @@ export default function Login() {
       toast.success(`Welcome back! Logged in as ${selectedRole}`);
       navigate(`/${selectedRole}`);
     } catch (error) {
-      toast.error('Login failed. Please try again.');
+      toast.error(error.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
