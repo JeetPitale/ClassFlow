@@ -19,6 +19,7 @@ class Quiz
     public $total_marks;
     public $created_by_teacher_id;
     public $semester;
+    public $scheduled_at;
 
     public function __construct()
     {
@@ -45,6 +46,7 @@ class Quiz
                   FROM " . $this->table_name . " q
                   LEFT JOIN teachers t ON q.created_by_teacher_id = t.id
                   WHERE q.semester = :semester
+                  AND (q.scheduled_at IS NULL OR q.scheduled_at <= NOW())
                   ORDER BY q.created_at DESC";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":semester", $semester);
@@ -81,8 +83,8 @@ class Quiz
     public function create()
     {
         $query = "INSERT INTO " . $this->table_name . "
-                  (title, description, duration_minutes, total_marks, created_by_teacher_id, semester)
-                  VALUES (:title, :description, :duration_minutes, :total_marks, :created_by_teacher_id, :semester)";
+                  (title, description, duration_minutes, total_marks, created_by_teacher_id, semester, scheduled_at)
+                  VALUES (:title, :description, :duration_minutes, :total_marks, :created_by_teacher_id, :semester, :scheduled_at)";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":title", $this->title);
         $stmt->bindParam(":description", $this->description);
@@ -90,6 +92,7 @@ class Quiz
         $stmt->bindParam(":total_marks", $this->total_marks);
         $stmt->bindParam(":created_by_teacher_id", $this->created_by_teacher_id);
         $stmt->bindParam(":semester", $this->semester);
+        $stmt->bindParam(":scheduled_at", $this->scheduled_at);
 
         if ($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
@@ -105,7 +108,8 @@ class Quiz
                       description = :description,
                       duration_minutes = :duration_minutes,
                       total_marks = :total_marks,
-                      semester = :semester
+                      semester = :semester,
+                      scheduled_at = :scheduled_at
                   WHERE id = :id";
 
         $stmt = $this->conn->prepare($query);
@@ -115,6 +119,7 @@ class Quiz
         $stmt->bindParam(":duration_minutes", $this->duration_minutes);
         $stmt->bindParam(":total_marks", $this->total_marks);
         $stmt->bindParam(":semester", $this->semester);
+        $stmt->bindParam(":scheduled_at", $this->scheduled_at);
         $stmt->bindParam(":id", $this->id);
 
         if ($stmt->execute()) {

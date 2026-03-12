@@ -64,7 +64,8 @@ export default function TeacherQuizzes() {
     description: '',
     duration: 30,
     maxMarks: 25,
-    semester: '1'
+    semester: '1',
+    scheduledAt: ''
   });
 
   const [questionFormData, setQuestionFormData] = useState({
@@ -75,7 +76,7 @@ export default function TeacherQuizzes() {
   });
 
   const resetQuizForm = () => {
-    setQuizFormData({ title: '', description: '', duration: 30, maxMarks: 25, semester: '1' });
+    setQuizFormData({ title: '', description: '', duration: 30, maxMarks: 25, semester: '1', scheduledAt: '' });
     setEditingQuiz(null);
   };
 
@@ -96,7 +97,8 @@ export default function TeacherQuizzes() {
       description: quiz.description || '',
       duration: quiz.duration || 30,
       maxMarks: quiz.maxMarks || 25,
-      semester: quiz.semester ? quiz.semester.toString() : '1'
+      semester: quiz.semester ? quiz.semester.toString() : '1',
+      scheduledAt: quiz.scheduled_at || ''
     });
     setIsQuizDialogOpen(true);
   };
@@ -198,13 +200,22 @@ export default function TeacherQuizzes() {
 
       const method = editingQuiz ? 'PUT' : 'POST';
 
+      const payload = {
+        title: quizFormData.title,
+        description: quizFormData.description,
+        duration: quizFormData.duration,
+        maxMarks: quizFormData.maxMarks,
+        semester: quizFormData.semester,
+        scheduledAt: quizFormData.scheduledAt || null
+      };
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(quizFormData)
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
@@ -751,14 +762,26 @@ export default function TeacherQuizzes() {
                   </div>
 
                   <div className="flex items-center justify-between pt-4 border-t border-border">
-                    <span className="text-xs text-muted-foreground">
-                      {(() => {
-                        try {
-                          const date = new Date(quiz.createdAt);
-                          return !isNaN(date.getTime()) ? format(date, 'MMM d, yyyy') : 'N/A';
-                        } catch { return 'N/A'; }
-                      })()}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-muted-foreground">
+                        {(() => {
+                          try {
+                            const date = new Date(quiz.createdAt);
+                            return !isNaN(date.getTime()) ? `Created: ${format(date, 'MMM d, yyyy')}` : 'N/A';
+                          } catch { return 'N/A'; }
+                        })()}
+                      </span>
+                      {quiz.scheduled_at && new Date(quiz.scheduled_at) > new Date() && (
+                        <Badge variant="outline" className="text-warning border-warning/50 mt-1 self-start">
+                          Scheduled: {(() => {
+                            try {
+                              const date = new Date(quiz.scheduled_at);
+                              return !isNaN(date.getTime()) ? format(date, 'MMM d, h:mm a') : 'Invalid date';
+                            } catch { return 'Invalid Date'; }
+                          })()}
+                        </Badge>
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" onClick={() => handleOpenQuestions(quiz)}>
                         <ListPlus className="w-4 h-4" />
@@ -783,7 +806,7 @@ export default function TeacherQuizzes() {
                 </div>
               )}
           </div>
-        </TabsContent>
+        </TabsContent >
 
         <TabsContent value="history" className="space-y-4">
           <div className="card-elevated overflow-hidden">
@@ -852,13 +875,14 @@ export default function TeacherQuizzes() {
             </div>
           </div>
         </TabsContent>
-      </Tabs>
+      </Tabs >
 
       {/* Create/Edit Quiz Dialog */}
-      <Dialog open={isQuizDialogOpen} onOpenChange={(open) => {
+      < Dialog open={isQuizDialogOpen} onOpenChange={(open) => {
         setIsQuizDialogOpen(open);
         if (!open) resetQuizForm();
-      }}>
+      }
+      }>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{editingQuiz ? 'Edit Quiz' : 'Create Quiz'}</DialogTitle>
@@ -902,16 +926,15 @@ export default function TeacherQuizzes() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2">
+            <div className="flex flex-col gap-4 sm:grid sm:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="duration">Duration (minutes)</Label>
+                <Label htmlFor="duration">Duration (mins)</Label>
                 <Input
                   id="duration"
                   type="number"
                   min="1"
                   value={quizFormData.duration}
                   onChange={(e) => setQuizFormData({ ...quizFormData, duration: parseInt(e.target.value) })} />
-
               </div>
               <div className="space-y-2">
                 <Label htmlFor="maxMarks">Max Marks</Label>
@@ -923,6 +946,14 @@ export default function TeacherQuizzes() {
                   onChange={(e) => setQuizFormData({ ...quizFormData, maxMarks: parseInt(e.target.value) })} />
 
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="scheduledAt">Publish Date</Label>
+                <Input
+                  id="scheduledAt"
+                  type="datetime-local"
+                  value={quizFormData.scheduledAt}
+                  onChange={(e) => setQuizFormData({ ...quizFormData, scheduledAt: e.target.value })} />
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -930,10 +961,10 @@ export default function TeacherQuizzes() {
             <Button onClick={handleQuizSubmit}>{editingQuiz ? 'Update' : 'Create'}</Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog >
 
       {/* Questions Management Dialog */}
-      <Dialog open={isQuestionDialogOpen} onOpenChange={(open) => {
+      < Dialog open={isQuestionDialogOpen} onOpenChange={(open) => {
         setIsQuestionDialogOpen(open);
         if (!open) {
           resetQuestionForm();
@@ -1127,10 +1158,10 @@ export default function TeacherQuizzes() {
             <Button variant="outline" onClick={() => setIsQuestionDialogOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog >
 
       {/* Delete Quiz Confirmation */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      < AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen} >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Quiz</AlertDialogTitle>
@@ -1148,7 +1179,7 @@ export default function TeacherQuizzes() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
-    </div>);
+      </AlertDialog >
+    </div >);
 
 }

@@ -61,6 +61,7 @@ export default function TeacherAssignments() {
     dueDate: '',
     maxMarks: 100,
     semester: '1',
+    scheduledAt: '',
     attachments: []
   });
   const [isDragging, setIsDragging] = useState(false);
@@ -111,7 +112,7 @@ export default function TeacherAssignments() {
   };
 
   const resetForm = () => {
-    setFormData({ title: '', description: '', dueDate: '', maxMarks: 100, semester: '1', attachments: [] });
+    setFormData({ title: '', description: '', dueDate: '', maxMarks: 100, semester: '1', scheduledAt: '', attachments: [] });
     setEditingAssignment(null);
   };
 
@@ -135,6 +136,7 @@ export default function TeacherAssignments() {
       dueDate: assignment.due_date,
       maxMarks: assignment.total_marks,
       semester: assignment.semester || '1',
+      scheduledAt: assignment.scheduled_at || '',
       attachments: assignment.attachments || []
     });
     setIsDialogOpen(true);
@@ -234,6 +236,7 @@ export default function TeacherAssignments() {
     data.append('due_date', formData.dueDate);
     data.append('total_marks', formData.maxMarks);
     data.append('semester', formData.semester);
+    if (formData.scheduledAt) data.append('scheduled_at', formData.scheduledAt);
 
     // Append the last uploaded file (assuming single file upload for now based on backend)
     // The UI processes multiple but we'll take the latest one for the attachment field
@@ -262,7 +265,8 @@ export default function TeacherAssignments() {
           description: formData.description,
           due_date: formData.dueDate,
           total_marks: formData.maxMarks,
-          semester: formData.semester
+          semester: formData.semester,
+          scheduled_at: formData.scheduledAt
         });
         toast({ title: 'Success', description: 'Assignment updated' });
       } else {
@@ -360,6 +364,11 @@ export default function TeacherAssignments() {
                             {assignment.teacher_name && ` by ${assignment.teacher_name}`}
                           </span>
                         )}
+                        {assignment.scheduled_at && new Date(assignment.scheduled_at) > new Date() && (
+                          <Badge variant="outline" className="text-warning border-warning/50">
+                            Scheduled: {format(new Date(assignment.scheduled_at), 'MMM d, h:mm a')}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -408,6 +417,10 @@ export default function TeacherAssignments() {
               <div className="space-y-2">
                 <Label>Due Date *</Label>
                 <Input type="datetime-local" value={formData.dueDate} onChange={e => setFormData({ ...formData, dueDate: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Publish/Schedule Date (Optional)</Label>
+                <Input type="datetime-local" value={formData.scheduledAt} onChange={e => setFormData({ ...formData, scheduledAt: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Max Marks</Label>

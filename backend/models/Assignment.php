@@ -18,6 +18,7 @@ class Assignment
     public $total_marks;
     public $created_by_teacher_id;
     public $semester;
+    public $scheduled_at;
 
     public $attachment_path;
 
@@ -79,8 +80,8 @@ class Assignment
     public function create()
     {
         $query = "INSERT INTO " . $this->table_name . "
-                  (title, description, due_date, total_marks, created_by_teacher_id, semester, attachment_path)
-                  VALUES (:title, :description, :due_date, :total_marks, :created_by_teacher_id, :semester, :attachment_path)";
+                  (title, description, due_date, total_marks, created_by_teacher_id, semester, attachment_path, scheduled_at)
+                  VALUES (:title, :description, :due_date, :total_marks, :created_by_teacher_id, :semester, :attachment_path, :scheduled_at)";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":title", $this->title);
         $stmt->bindParam(":description", $this->description);
@@ -89,6 +90,7 @@ class Assignment
         $stmt->bindParam(":created_by_teacher_id", $this->created_by_teacher_id);
         $stmt->bindParam(":semester", $this->semester);
         $stmt->bindParam(":attachment_path", $this->attachment_path);
+        $stmt->bindParam(":scheduled_at", $this->scheduled_at);
 
         if ($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
@@ -101,7 +103,7 @@ class Assignment
     {
         $query = "UPDATE " . $this->table_name . "
                   SET title = :title, description = :description, due_date = :due_date, 
-                      total_marks = :total_marks, semester = :semester, attachment_path = :attachment_path
+                      total_marks = :total_marks, semester = :semester, attachment_path = :attachment_path, scheduled_at = :scheduled_at
                   WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id", $this->id);
@@ -111,6 +113,7 @@ class Assignment
         $stmt->bindParam(":total_marks", $this->total_marks);
         $stmt->bindParam(":semester", $this->semester);
         $stmt->bindParam(":attachment_path", $this->attachment_path);
+        $stmt->bindParam(":scheduled_at", $this->scheduled_at);
         return $stmt->execute();
     }
 
