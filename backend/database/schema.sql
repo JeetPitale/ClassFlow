@@ -260,12 +260,12 @@ CREATE TABLE syllabus_subtopics (
 
 -- Insert Initial Admin
 INSERT INTO admins (email, password_hash, name, phone, dob, gender, address) VALUES
-('jeetzo77@admin.in', '$2y$10$vFZ7EKZJmW5FqZ9KqvLb4uKhxJTqXB5YvMH5p7Vc.N7HJY5Z6ZKZm', 'Alex Administrator', '9876543210', '1985-06-15', 'male', '456 Admin Street, City Center');
+('jeetzo77@admin.in', '$2y$12$DamPCAA9VyYejQx.yrrBX.pphyLfZ5Leg0pAyKHD/.M.dEdRIEzhO', 'Alex Administrator', '9876543210', '1985-06-15', 'male', '456 Admin Street, City Center');
 
 -- Insert Sample Teacher
 INSERT INTO teachers (email, password_hash, name, phone, dob, gender, address, subject_specialization, qualification, experience_years) VALUES
-('teacher@lms.in', '$2y$10$7KIXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/abc', 'Jane Teacher', '9988776655', '1980-03-20', 'female', '789 Teacher Ave', 'Computer Science', 'M.Tech', 5);
+('teacher@lms.in', '$2y$12$9AYEGyR9ji1IkFEupxWFKuxdyCUDupsbdRTtdhXOoKejtS0KOfjXy', 'Jane Teacher', '9988776655', '1980-03-20', 'female', '789 Teacher Ave', 'Computer Science', 'M.Tech', 5);
 
 -- Insert Sample Student
 INSERT INTO students (email, password_hash, name, phone, dob, gender, address, enrollment_no, semester, department) VALUES
-('23ci2020044@student.edu', '$2y$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B77UdFm', 'John Smith', '1234567890', '2000-01-01', 'male', '123 Student Ln', 'ENR001', 1, 'Computer Science');
+('23ci2020044@student.edu', '$2y$12$iQi3i0B1y8feGLYKKPxr2eNsdVqxoz/VBDn9.FZ52LTmwNWnyJZlS', 'John Smith', '1234567890', '2000-01-01', 'male', '123 Student Ln', 'ENR001', 1, 'Computer Science');
