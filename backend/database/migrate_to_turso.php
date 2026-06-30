@@ -133,6 +133,7 @@ function convertMySQLToSQLite($sql) {
             
             $lines = explode("\n", $stmt);
             $newLines = [];
+            $tableIndexes = [];
             
             foreach ($lines as $line) {
                 $trimmed = trim($line);
@@ -140,7 +141,7 @@ function convertMySQLToSQLite($sql) {
                 if (preg_match('/^\s*(?:INDEX|KEY)\s+(\w+)\s*\(([^)]+)\)/i', $trimmed, $im)) {
                     $idxName = $im[1];
                     $idxCols = $im[2];
-                    $converted[] = "CREATE INDEX IF NOT EXISTS {$idxName} ON {$tableName} ({$idxCols});";
+                    $tableIndexes[] = "CREATE INDEX IF NOT EXISTS {$idxName} ON {$tableName} ({$idxCols});";
                     continue;
                 }
                 
@@ -155,6 +156,9 @@ function convertMySQLToSQLite($sql) {
             $stmt = preg_replace('/,\s*(\r?\n\s*\)\s*;)/i', '\1', $stmt);
             
             $converted[] = $stmt;
+            foreach ($tableIndexes as $idxStmt) {
+                $converted[] = $idxStmt;
+            }
         } else {
             $stmt = preg_replace('/NOW\(\)/i', 'CURRENT_TIMESTAMP', $stmt);
             $converted[] = $stmt;
