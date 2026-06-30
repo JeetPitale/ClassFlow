@@ -135,6 +135,16 @@ if (!class_exists('Database')) {
             return $mappedRow;
         }
 
+        public function fetchColumn($column_number = 0)
+        {
+            $row = $this->fetch();
+            if ($row === false) {
+                return false;
+            }
+            $values = array_values($row);
+            return isset($values[$column_number]) ? $values[$column_number] : null;
+        }
+
         public function fetchAll($fetch_style = PDO::FETCH_ASSOC)
         {
             $rows = [];
