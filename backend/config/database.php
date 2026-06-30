@@ -325,8 +325,8 @@ if (!class_exists('Database')) {
             }
 
             // Load env variables
-            $db_url = getenv('TURSO_DB_URL') ?: 'libsql://database-rose-mountain-vercel-icfg-oi3nf3jvh2rsjghg56ah9nsp.aws-us-east-1.turso.io';
-            $db_token = getenv('TURSO_AUTH_TOKEN') ?: '';
+            $db_url = getenv('CLASSFLOW_TURSO_DB_URL') ?: getenv('TURSO_DB_URL') ?: 'libsql://database-rose-mountain-vercel-icfg-oi3nf3jvh2rsjghg56ah9nsp.aws-us-east-1.turso.io';
+            $db_token = getenv('CLASSFLOW_TURSO_AUTH_TOKEN') ?: getenv('TURSO_AUTH_TOKEN') ?: '';
 
             // Convert libsql:// to https://
             $http_url = str_replace('libsql://', 'https://', $db_url);
