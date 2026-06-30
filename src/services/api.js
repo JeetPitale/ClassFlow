@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_URL = import.meta.env.PROD
-    ? 'https://classflow-backend-jeet.azurewebsites.net/api'
+    ? '/api'
     : 'http://localhost:8000/api';
 
 const api = axios.create({
