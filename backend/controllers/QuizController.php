@@ -7,7 +7,7 @@ class QuizController
 {
     public static function index()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $authHeader = $headers['Authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
         $token = str_replace('Bearer ', '', $authHeader);
         $decoded = JWTHandler::validateToken($token);
@@ -43,7 +43,7 @@ class QuizController
     public static function store()
     {
         try {
-            $headers = getallheaders();
+            $headers = getClassFlowHeaders();
             $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
             $decoded = JWTHandler::validateToken($token);
             if (!$decoded || $decoded['role'] !== 'teacher') {
@@ -88,7 +88,7 @@ class QuizController
 
     public static function update($id)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
         if (!$decoded || $decoded['role'] !== 'teacher') {
@@ -125,7 +125,7 @@ class QuizController
 
     public static function destroy($id)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 
@@ -170,7 +170,7 @@ class QuizController
     public static function addQuestion($quiz_id)
     {
         try {
-            $headers = getallheaders();
+            $headers = getClassFlowHeaders();
             $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
             $decoded = JWTHandler::validateToken($token);
             if (!$decoded || $decoded['role'] !== 'teacher') {
@@ -216,7 +216,7 @@ class QuizController
     public static function submitAttempt($id)
     {
         try {
-            $headers = getallheaders();
+            $headers = getClassFlowHeaders();
             $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
             $decoded = JWTHandler::validateToken($token);
             if (!$decoded || $decoded['role'] !== 'student') {
@@ -265,7 +265,7 @@ class QuizController
 
     public static function myAttempts()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 
@@ -280,7 +280,7 @@ class QuizController
 
     public static function history()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 
@@ -299,7 +299,7 @@ class QuizController
     }
     public static function bulkAddQuestions($quizId)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 
@@ -327,7 +327,7 @@ class QuizController
     }
     public static function deleteQuestion($quizId, $questionId)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 
@@ -345,7 +345,7 @@ class QuizController
     }
     public static function updateQuestion($quizId, $questionId)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 

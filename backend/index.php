@@ -11,6 +11,36 @@ error_reporting(E_ALL);
 
 require_once __DIR__ . '/config/cors.php';
 
+// Global helper to robustly capture request headers in CGI/FPM environments
+function getClassFlowHeaders() {
+    $headers = [];
+    if (function_exists('getallheaders')) {
+        $headers = getallheaders();
+    }
+    
+    // Check if Authorization is set (case-insensitive)
+    $hasAuth = false;
+    foreach ($headers as $key => $value) {
+        if (strcasecmp($key, 'Authorization') === 0) {
+            $hasAuth = true;
+            if ($key !== 'Authorization') {
+                $headers['Authorization'] = $value;
+            }
+            break;
+        }
+    }
+    
+    if (!$hasAuth) {
+        if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $headers['Authorization'] = $_SERVER['HTTP_AUTHORIZATION'];
+        } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $headers['Authorization'] = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        }
+    }
+    
+    return $headers;
+}
+
 // Load .env (TEMPORARY: FOR LOCAL DEV ONLY)
 $envFile = __DIR__ . '/.env';
 if (file_exists($envFile)) {

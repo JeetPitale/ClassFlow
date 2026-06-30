@@ -8,7 +8,7 @@ class DashboardController
     public static function getStats()
     {
         // Auth Check
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 
@@ -73,7 +73,7 @@ class DashboardController
     }
     public static function getStudentStats()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 
@@ -213,7 +213,7 @@ class DashboardController
     }
     public static function getTeacherStats()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 

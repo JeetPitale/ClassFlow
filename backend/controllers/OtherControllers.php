@@ -7,7 +7,7 @@ class ScheduleController
 {
     public static function index()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 
@@ -62,7 +62,7 @@ class FeedbackController
     public static function index()
     {
         // Get JWT token
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 
@@ -86,7 +86,7 @@ class FeedbackController
 
     public static function store()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
         if (!$decoded || $decoded['role'] !== 'student') {

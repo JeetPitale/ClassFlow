@@ -7,7 +7,7 @@ class AssignmentController
 {
     public static function index()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $authHeader = $headers['Authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
         $token = str_replace('Bearer ', '', $authHeader);
         $decoded = JWTHandler::validateToken($token);
@@ -52,7 +52,7 @@ class AssignmentController
 
     public static function store()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
         if (!$decoded || $decoded['role'] !== 'teacher') {
@@ -109,7 +109,7 @@ class AssignmentController
 
     public static function update($id)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
         if (!$decoded)
@@ -177,7 +177,7 @@ class AssignmentController
 
     public static function submit($id)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
         if (!$decoded || $decoded['role'] !== 'student') {
@@ -195,7 +195,7 @@ class AssignmentController
 
     public static function grade($submission_id)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
         if (!$decoded || $decoded['role'] !== 'teacher') {
@@ -226,7 +226,7 @@ class AssignmentController
 
     public static function mySubmissions()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 
@@ -242,7 +242,7 @@ class AssignmentController
     public static function gradeStudent($assignment_id)
     {
         try {
-            $headers = getallheaders();
+            $headers = getClassFlowHeaders();
             $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
             $decoded = JWTHandler::validateToken($token);
             if (!$decoded || $decoded['role'] !== 'teacher') {

@@ -15,7 +15,7 @@ class NotificationController
      */
     public static function index()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
         $token = str_replace('Bearer ', '', $authHeader);
         $decoded = JWTHandler::validateToken($token);
@@ -35,7 +35,7 @@ class NotificationController
      */
     public static function unreadCount()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
         $token = str_replace('Bearer ', '', $authHeader);
         $decoded = JWTHandler::validateToken($token);
@@ -55,7 +55,7 @@ class NotificationController
      */
     public static function markAsRead($id)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
         $token = str_replace('Bearer ', '', $authHeader);
         $decoded = JWTHandler::validateToken($token);
@@ -88,7 +88,7 @@ class NotificationController
      */
     public static function markAllAsRead()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
         $token = str_replace('Bearer ', '', $authHeader);
         $decoded = JWTHandler::validateToken($token);
@@ -111,7 +111,7 @@ class NotificationController
      */
     public static function destroy($id)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
         $token = str_replace('Bearer ', '', $authHeader);
         $decoded = JWTHandler::validateToken($token);

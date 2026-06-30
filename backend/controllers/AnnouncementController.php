@@ -16,7 +16,7 @@ class AnnouncementController
      */
     public static function index()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
         $token = str_replace('Bearer ', '', $authHeader);
         $decoded = JWTHandler::validateToken($token);
@@ -58,7 +58,7 @@ class AnnouncementController
      */
     public static function store()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
         $token = str_replace('Bearer ', '', $authHeader);
         $decoded = JWTHandler::validateToken($token);
@@ -105,7 +105,7 @@ class AnnouncementController
      */
     public static function update($id)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
         $token = str_replace('Bearer ', '', $authHeader);
         $decoded = JWTHandler::validateToken($token);
@@ -148,7 +148,7 @@ class AnnouncementController
      */
     public static function destroy($id)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
         $token = str_replace('Bearer ', '', $authHeader);
         $decoded = JWTHandler::validateToken($token);

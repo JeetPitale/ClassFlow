@@ -7,7 +7,7 @@ class ProfileController
 {
     private static function getUserIdAndRole()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 

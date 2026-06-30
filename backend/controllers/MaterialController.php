@@ -7,7 +7,7 @@ class MaterialController
 {
     public static function index()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 
@@ -36,7 +36,7 @@ class MaterialController
 
     public static function store()
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $authHeader = $headers['Authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
         $token = str_replace('Bearer ', '', $authHeader);
 
@@ -203,7 +203,7 @@ class MaterialController
 
     public static function update($id)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 
@@ -273,7 +273,7 @@ class MaterialController
 
     public static function destroy($id)
     {
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
         if (!$decoded)
@@ -301,7 +301,7 @@ class MaterialController
     public static function download($id)
     {
         // 1. Validate Token (Allow students, teachers, admins)
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
 

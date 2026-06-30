@@ -221,7 +221,7 @@ class SyllabusController
 
     private static function authenticate()
     {
-        $headers = function_exists('getallheaders') ? getallheaders() : [];
+        $headers = function_exists('getallheaders') ? getClassFlowHeaders() : [];
         $authHeader = $headers['Authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
         $token = str_replace('Bearer ', '', $authHeader);
 

@@ -54,7 +54,7 @@ class Schedule
     public function create($data)
     {
         // Get admin ID from JWT
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $token = str_replace('Bearer ', '', $headers['Authorization'] ?? '');
         $decoded = JWTHandler::validateToken($token);
         $adminId = $decoded ? $decoded['user_id'] : null;

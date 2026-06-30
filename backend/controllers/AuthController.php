@@ -98,7 +98,7 @@ class AuthController
     public static function me()
     {
         // Get auth token from header
-        $headers = getallheaders();
+        $headers = getClassFlowHeaders();
         $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
 
         if (empty($authHeader)) {
