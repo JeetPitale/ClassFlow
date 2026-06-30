@@ -90,8 +90,8 @@ if (!class_exists('Database')) {
                 throw new PDOException("LibSQL Query Error: " . $response['error']['message']);
             }
 
-            if (isset($response['result'])) {
-                $result = $response['result'];
+            if (isset($response['response']['result'])) {
+                $result = $response['response']['result'];
                 $this->resultCols = isset($result['cols']) ? $result['cols'] : [];
                 $this->resultRows = isset($result['rows']) ? $result['rows'] : [];
                 $this->affectedRows = isset($result['affected_row_count']) ? $result['affected_row_count'] : 0;
