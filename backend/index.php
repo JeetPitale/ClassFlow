@@ -19,7 +19,11 @@ if (file_exists($envFile)) {
         if (strpos(trim($line), '#') === 0)
             continue;
         list($name, $value) = explode('=', $line, 2);
-        putenv(trim($name) . '=' . trim($value));
+        $name = trim($name);
+        $value = trim($value);
+        if (getenv($name) === false || getenv($name) === '') {
+            putenv("$name=$value");
+        }
     }
 }
 
