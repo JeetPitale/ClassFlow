@@ -217,6 +217,12 @@ if (!class_exists('Database')) {
 
         public function translateSql($sql)
         {
+            // Replace MySQL CURDATE() -> 'now'
+            $sql = preg_replace('/CURDATE\(\)/i', "'now'", $sql);
+            
+            // Replace MySQL YEARWEEK(column, 1) -> strftime('%Y-%W', column)
+            $sql = preg_replace('/YEARWEEK\(([^,]+),\s*1\)/i', "strftime('%Y-%W', $1)", $sql);
+
             // Replace MySQL DATE_SUB(NOW(), INTERVAL 7 DAY) -> datetime('now', '-7 days')
             $sql = preg_replace('/DATE_SUB\(\s*NOW\(\)\s*,\s*INTERVAL\s*(\d+)\s*DAY\s*\)/i', "datetime('now', '-\$1 days')", $sql);
             
