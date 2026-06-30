@@ -139,7 +139,7 @@ export default function StudentAssignments() {
                                     <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Attachments</h4>
                                     <div className="flex flex-wrap gap-2">
                                         <a
-                                            href={`https://classflow-backend-jeet.azurewebsites.net/${selectedAssignment.attachment_path}`}
+                                            href={`/${selectedAssignment.attachment_path}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="no-underline"

@@ -41,7 +41,7 @@ export default function TakeQuiz() {
 
             try {
                 // 1. Fetch Quiz Details
-                const quizRes = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${quizId}`, {
+                const quizRes = await fetch(`/api/quizzes/${quizId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const quizData = await quizRes.json();
@@ -51,7 +51,7 @@ export default function TakeQuiz() {
                 }
 
                 // 2. Fetch Questions
-                const questionsRes = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${quizId}/questions`, {
+                const questionsRes = await fetch(`/api/quizzes/${quizId}/questions`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const questionsData = await questionsRes.json();
@@ -200,7 +200,7 @@ export default function TakeQuiz() {
         try {
             const score = calculateScore();
 
-            const response = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${quizId}/attempt`, {
+            const response = await fetch(`/api/quizzes/${quizId}/attempt`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

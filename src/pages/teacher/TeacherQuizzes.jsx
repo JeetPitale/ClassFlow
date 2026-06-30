@@ -124,7 +124,7 @@ export default function TeacherQuizzes() {
     setIsQuestionDialogOpen(true);
 
     try {
-      const response = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${quiz.id}/questions`, {
+      const response = await fetch(`/api/quizzes/${quiz.id}/questions`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -143,7 +143,7 @@ export default function TeacherQuizzes() {
 
   const fetchQuizzes = async () => {
     try {
-      const response = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/quizzes', {
+      const response = await fetch('/api/quizzes', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -165,7 +165,7 @@ export default function TeacherQuizzes() {
 
   const fetchHistory = async () => {
     try {
-      const response = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/teacher/quiz-history', {
+      const response = await fetch('/api/teacher/quiz-history', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -216,8 +216,8 @@ export default function TeacherQuizzes() {
 
     try {
       const url = editingQuiz
-        ? `https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${editingQuiz.id}`
-        : 'https://classflow-backend-jeet.azurewebsites.net/api/quizzes';
+        ? `/api/quizzes/${editingQuiz.id}`
+        : '/api/quizzes';
 
       const method = editingQuiz ? 'PUT' : 'POST';
 
@@ -265,7 +265,7 @@ export default function TeacherQuizzes() {
     if (!deletingQuiz) return;
 
     try {
-      const response = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${deletingQuiz.id}`, {
+      const response = await fetch(`/api/quizzes/${deletingQuiz.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -314,7 +314,7 @@ export default function TeacherQuizzes() {
       let url, method, body;
 
       if (editingQuestion) {
-        url = `https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${selectedQuiz.id}/questions/${editingQuestion.id}`;
+        url = `/api/quizzes/${selectedQuiz.id}/questions/${editingQuestion.id}`;
         method = 'PUT';
         body = JSON.stringify(questionFormData);
 
@@ -353,7 +353,7 @@ export default function TeacherQuizzes() {
           toast({ title: 'Error', description: data.message || 'Failed to update question', variant: 'destructive' });
         }
       } else {
-        url = `https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${selectedQuiz.id}/questions`;
+        url = `/api/quizzes/${selectedQuiz.id}/questions`;
         method = 'POST';
         body = JSON.stringify(questionFormData);
 
@@ -407,7 +407,7 @@ export default function TeacherQuizzes() {
     console.log("Deleting question ID:", questionId); // Debug logging
 
     try {
-      const response = await fetch(`https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${selectedQuiz.id}/questions/${questionId}`, {
+      const response = await fetch(`/api/quizzes/${selectedQuiz.id}/questions/${questionId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -474,7 +474,7 @@ export default function TeacherQuizzes() {
     }
 
     try {
-      const url = `https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${selectedQuiz.id}/questions/${question.id}`;
+      const url = `/api/quizzes/${selectedQuiz.id}/questions/${question.id}`;
       const body = JSON.stringify({
         question: question.question,
         options: question.options,
@@ -650,7 +650,7 @@ export default function TeacherQuizzes() {
                 }
 
                 // Send to backend
-                fetch(`https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${selectedQuiz.id}/questions/bulk`, {
+                fetch(`/api/quizzes/${selectedQuiz.id}/questions/bulk`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -662,7 +662,7 @@ export default function TeacherQuizzes() {
                   .then(data => {
                     if (data.success) {
                       // Refresh questions from backend to get real IDs
-                      fetch(`https://classflow-backend-jeet.azurewebsites.net/api/quizzes/${selectedQuiz.id}/questions`, {
+                      fetch(`/api/quizzes/${selectedQuiz.id}/questions`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                       })
                         .then(res => res.json())

@@ -40,7 +40,7 @@ export default function StudentMaterials() {
 
   const fetchMaterials = async () => {
     try {
-      const response = await fetch('https://classflow-backend-jeet.azurewebsites.net/api/materials', {
+      const response = await fetch('/api/materials', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -67,7 +67,7 @@ export default function StudentMaterials() {
       window.open(material.file_url, '_blank');
     } else {
       // Use the new download endpoint
-      // const downloadUrl = `https://classflow-backend-jeet.azurewebsites.net/api/materials/${material.id}/download?token=${token}`;
+      // const downloadUrl = `/api/materials/${material.id}/download?token=${token}`;
 
       // Use dynamic base URL from our API configuration
       const downloadUrl = `${api.defaults.baseURL}/materials/${material.id}/download?token=${token}`;
