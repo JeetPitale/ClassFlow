@@ -58,6 +58,9 @@ class CodingPracticeController
         $question->title = $data->title;
         $question->description = $data->description;
         $question->difficulty = $data->difficulty ?? 'Easy';
+        $question->time_limit = $data->time_limit ?? 2.0;
+        $question->memory_limit = $data->memory_limit ?? 256000;
+        $question->category_tags = $data->category_tags ?? '[]';
         $question->created_by_teacher_id = $decoded['user_id'];
 
         if ($question->create()) {
@@ -94,6 +97,9 @@ class CodingPracticeController
         $question->title = $data->title;
         $question->description = $data->description;
         $question->difficulty = $data->difficulty ?? 'Easy';
+        $question->time_limit = $data->time_limit ?? 2.0;
+        $question->memory_limit = $data->memory_limit ?? 256000;
+        $question->category_tags = $data->category_tags ?? '[]';
 
         if ($question->update()) {
             Response::success(['message' => 'Question updated successfully']);
