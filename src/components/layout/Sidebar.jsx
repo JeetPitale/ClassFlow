@@ -18,7 +18,8 @@ import {
   Award,
   User,
   Rocket,
-  X
+  X,
+  Code
 } from
   'lucide-react';
 
@@ -61,6 +62,7 @@ const studentNavItems = [
   { to: '/student/quizzes', icon: BookOpen, label: 'Quizzes' },
   { to: '/student/schedule', icon: Calendar, label: 'Schedule' },
   { to: '/student/startup', icon: Rocket, label: 'My Startup' },
+  { to: '/student/coding-practice', icon: Code, label: 'Coding Practice' },
   { to: '/student/performance', icon: BarChart3, label: 'Performance' },
   { to: '/student/profile', icon: User, label: 'Profile' }];
 

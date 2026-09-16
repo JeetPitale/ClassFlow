@@ -44,6 +44,7 @@ import StudentAssignments from "./pages/student/StudentAssignments";
 import StudentSchedule from "./pages/student/StudentSchedule";
 import StudentStartup from "./pages/student/StudentStartup";
 import StudentPerformance from "./pages/student/StudentPerformance";
+import StudentCodingPractice from "./pages/student/StudentCodingPractice";
 import StudentQuizzes from "./pages/student/StudentQuizzes";
 import TakeQuiz from "./pages/student/TakeQuiz";
 
@@ -98,6 +99,7 @@ const App = () =>
               <Route path="quiz/:quizId" element={<TakeQuiz />} />
               <Route path="schedule" element={<StudentSchedule />} />
               <Route path="startup" element={<StudentStartup />} />
+              <Route path="coding-practice" element={<StudentCodingPractice />} />
               {/* <Route path="performance" element={<StudentPerformance />} /> */}
               <Route path="profile" element={<ViewOnlyProfile />} />
             </Route>
