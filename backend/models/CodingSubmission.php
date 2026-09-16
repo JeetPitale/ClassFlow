@@ -5,6 +5,7 @@ class CodingSubmission
 {
     private $conn;
     private $table_name = "coding_submissions";
+    private $last_error;
 
     public $id;
     public $question_id;
@@ -71,6 +72,14 @@ class CodingSubmission
         $stmt->bindParam(":testcases_passed", $this->testcases_passed);
         $stmt->bindParam(":total_testcases", $this->total_testcases);
 
-        return $stmt->execute();
+        if ($stmt->execute()) {
+            return true;
+        }
+        $this->last_error = $stmt->errorInfo();
+        return false;
+    }
+
+    public function getLastError() {
+        return $this->last_error;
     }
 }

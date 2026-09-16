@@ -209,10 +209,14 @@ class CodingPracticeController
         $submission->runtime = rand(10, 50) / 100;
         $submission->memory_used = rand(1000, 5000);
 
-        if ($submission->create()) {
-            Response::success(['message' => 'Code submitted successfully', 'status' => $submission->status, 'score' => $submission->score]);
-        } else {
-            Response::error('Failed to submit code');
+        try {
+            if ($submission->create()) {
+                Response::success(['message' => 'Code submitted successfully', 'status' => $submission->status, 'score' => $submission->score]);
+            } else {
+                Response::error('Failed to submit code: ' . json_encode($submission->getLastError()));
+            }
+        } catch (Exception $e) {
+            Response::error('Database Error: ' . $e->getMessage());
         }
     }
 

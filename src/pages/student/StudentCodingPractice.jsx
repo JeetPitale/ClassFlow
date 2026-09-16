@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Code, Terminal, Loader2, Play, CheckCircle2, XCircle } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Code, Terminal, Loader2, Play, CheckCircle2, XCircle, Clock, Timer } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,11 @@ export default function StudentCodingPractice() {
   const [runningSample, setRunningSample] = useState(false);
   const [sampleResults, setSampleResults] = useState(null);
 
+  // Timer State
+  const [timeLeft, setTimeLeft] = useState(0);
+  const timerRef = useRef(null);
+  const autoSubmittedRef = useRef(false);
+
   const { toast } = useToast();
   const { theme } = useTheme();
 
@@ -36,6 +41,7 @@ export default function StudentCodingPractice() {
     fetchQuestions();
   }, []);
 
+  // Tab switch detection - auto-submit
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden && isSubmitOpen) {
@@ -53,6 +59,53 @@ export default function StudentCodingPractice() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [isSubmitOpen, codeContent, selectedQuestion]);
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (!isSubmitOpen || timeLeft <= 0) return;
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          // Auto-submit when timer expires
+          if (!autoSubmittedRef.current) {
+            autoSubmittedRef.current = true;
+            toast({ 
+              title: '⏰ Time\'s Up!', 
+              description: 'Your code has been auto-submitted.',
+              variant: 'destructive'
+            });
+            handleSubmitCode();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerRef.current);
+  }, [isSubmitOpen, timeLeft > 0]);
+
+  // Cleanup timer when dialog closes
+  useEffect(() => {
+    if (!isSubmitOpen) {
+      clearInterval(timerRef.current);
+      autoSubmittedRef.current = false;
+    }
+  }, [isSubmitOpen]);
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
+
+  const getTimerColor = () => {
+    if (timeLeft <= 60) return 'text-red-500 animate-pulse';
+    if (timeLeft <= 300) return 'text-orange-500';
+    return 'text-green-500';
+  };
 
   const fetchQuestions = async () => {
     setLoading(true);
@@ -72,6 +125,10 @@ export default function StudentCodingPractice() {
     setSelectedQuestion(question);
     setCodeContent('# Write your python code here...\n\ndef solution():\n    pass\n');
     setSampleResults(null);
+    autoSubmittedRef.current = false;
+    // Start timer based on the question's time_limit (stored in seconds)
+    const timeLimitSeconds = Math.max(parseInt(question.time_limit) || 120, 60); // minimum 60s
+    setTimeLeft(timeLimitSeconds);
     setIsSubmitOpen(true);
   };
 
@@ -101,6 +158,7 @@ export default function StudentCodingPractice() {
       return;
     }
 
+    clearInterval(timerRef.current);
     setSubmitting(true);
     try {
       const response = await codingPracticeAPI.submit(selectedQuestion.id, { code: codeContent, language_id: language });
@@ -177,7 +235,13 @@ export default function StudentCodingPractice() {
               <DialogTitle className="text-xl flex items-center gap-2">
                 <Code className="h-5 w-5 text-primary"/> {selectedQuestion?.title}
               </DialogTitle>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                {/* Countdown Timer */}
+                <div className={`flex items-center gap-1.5 font-mono text-lg font-bold px-3 py-1 rounded-md border ${getTimerColor()} ${timeLeft <= 60 ? 'bg-red-500/10 border-red-500/30' : timeLeft <= 300 ? 'bg-orange-500/10 border-orange-500/30' : 'bg-green-500/10 border-green-500/30'}`}>
+                  <Timer className="h-4 w-4" />
+                  {formatTime(timeLeft)}
+                </div>
+                
                 <select 
                   className="text-sm bg-background border rounded px-2 py-1"
                   value={language}
