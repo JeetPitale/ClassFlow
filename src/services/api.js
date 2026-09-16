@@ -136,4 +136,14 @@ export const profileAPI = {
     changePassword: (data) => api.put('/profile/change-password', data),
 };
 
+// Coding Practice APIs
+export const codingPracticeAPI = {
+    getAll: () => api.get('/coding-questions'),
+    create: (data) => api.post('/coding-questions', data),
+    update: (id, data) => api.put(`/coding-questions/${id}`, data),
+    delete: (id) => api.delete(`/coding-questions/${id}`),
+    getSubmissions: (id) => api.get(`/coding-questions/${id}/submissions`),
+    submit: (id, data) => api.post(`/coding-questions/${id}/submit`, data),
+};
+
 export default api;

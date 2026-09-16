@@ -70,6 +70,7 @@ require_once __DIR__ . '/controllers/NotificationController.php';
 require_once __DIR__ . '/controllers/DashboardController.php';
 require_once __DIR__ . '/controllers/SyllabusController.php';
 require_once __DIR__ . '/controllers/ProfileController.php';
+require_once __DIR__ . '/controllers/CodingPracticeController.php';
 require_once __DIR__ . '/utils/Response.php';
 
 require_once __DIR__ . '/utils/RateLimiter.php';
@@ -264,6 +265,20 @@ elseif ($method === 'GET' && $uri === '/api/dashboard/teacher-stats')
     DashboardController::getTeacherStats();
 elseif ($method === 'GET' && $uri === '/api/dashboard/stats')
     DashboardController::getStats();
+// Coding Practice
+elseif ($method === 'GET' && $uri === '/api/coding-questions')
+    CodingPracticeController::index();
+elseif ($method === 'POST' && $uri === '/api/coding-questions')
+    CodingPracticeController::store();
+elseif ($method === 'PUT' && preg_match('/^\/api\/coding-questions\/(\d+)$/', $uri, $m))
+    CodingPracticeController::update($m[1]);
+elseif ($method === 'DELETE' && preg_match('/^\/api\/coding-questions\/(\d+)$/', $uri, $m))
+    CodingPracticeController::delete($m[1]);
+elseif ($method === 'GET' && preg_match('/^\/api\/coding-questions\/(\d+)\/submissions$/', $uri, $m))
+    CodingPracticeController::submissions($m[1]);
+elseif ($method === 'POST' && preg_match('/^\/api\/coding-questions\/(\d+)\/submit$/', $uri, $m))
+    CodingPracticeController::submit($m[1]);
+
 // Profile
 elseif ($method === 'PUT' && $uri === '/api/profile/update')
     ProfileController::updateProfile();
