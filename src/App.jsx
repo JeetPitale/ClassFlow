@@ -33,6 +33,7 @@ import TeacherQuizzes from "./pages/teacher/TeacherQuizzes";
 import TeacherFeedback from "./pages/teacher/TeacherFeedback";
 import TeacherSchedule from "./pages/teacher/TeacherSchedule";
 import TeacherSyllabus from "./pages/teacher/TeacherSyllabus";
+import TeacherCodingPractice from "./pages/teacher/TeacherCodingPractice";
 
 // Student Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -84,6 +85,7 @@ const App = () =>
               <Route path="quizzes" element={<TeacherQuizzes />} />
               <Route path="schedule" element={<TeacherSchedule />} />
               <Route path="syllabus" element={<TeacherSyllabus />} />
+              <Route path="coding-practice" element={<TeacherCodingPractice />} />
               <Route path="profile" element={<ViewOnlyProfile />} />
             </Route>
 

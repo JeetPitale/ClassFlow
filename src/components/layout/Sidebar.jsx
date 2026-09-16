@@ -49,6 +49,7 @@ const teacherNavItems = [
   { to: '/teacher/quizzes', icon: BookOpen, label: 'Quizzes' },
   { to: '/teacher/schedule', icon: Calendar, label: 'Schedule' },
   { to: '/teacher/syllabus', icon: Award, label: 'Syllabus Tracking' },
+  { to: '/teacher/coding-practice', icon: Code, label: 'Coding Practice' },
   { to: '/teacher/profile', icon: User, label: 'Profile' }];
 
 
