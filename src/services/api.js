@@ -144,6 +144,13 @@ export const codingPracticeAPI = {
     delete: (id) => api.delete(`/coding-questions/${id}`),
     getSubmissions: (id) => api.get(`/coding-questions/${id}/submissions`),
     submit: (id, data) => api.post(`/coding-questions/${id}/submit`, data),
+    getMySubmissions: () => api.get('/coding-questions/my-submissions'),
+    
+    // HackerRank-style additions
+    getTestCases: (id) => api.get(`/coding-questions/${id}/testcases`),
+    addTestCase: (id, data) => api.post(`/coding-questions/${id}/testcases`, data),
+    deleteTestCase: (tc_id) => api.delete(`/coding-questions/testcases/${tc_id}`),
+    runSample: (id, data) => api.post(`/coding-questions/${id}/run-sample`, data),
 };
 
 export default api;

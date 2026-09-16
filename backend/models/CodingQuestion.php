@@ -10,8 +10,10 @@ class CodingQuestion
     public $title;
     public $description;
     public $difficulty;
+    public $time_limit = 2.0;
+    public $memory_limit = 256000;
+    public $category_tags = '[]';
     public $created_by_teacher_id;
-    public $created_at;
     public $updated_at;
 
     public function __construct()
@@ -49,15 +51,18 @@ class CodingQuestion
     public function create()
     {
         $query = "INSERT INTO " . $this->table_name . "
-                (title, description, difficulty, created_by_teacher_id)
+                (title, description, difficulty, time_limit, memory_limit, category_tags, created_by_teacher_id)
                 VALUES
-                (:title, :description, :difficulty, :created_by_teacher_id)";
+                (:title, :description, :difficulty, :time_limit, :memory_limit, :category_tags, :created_by_teacher_id)";
 
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":title", $this->title);
         $stmt->bindParam(":description", $this->description);
         $stmt->bindParam(":difficulty", $this->difficulty);
+        $stmt->bindParam(":time_limit", $this->time_limit);
+        $stmt->bindParam(":memory_limit", $this->memory_limit);
+        $stmt->bindParam(":category_tags", $this->category_tags);
         $stmt->bindParam(":created_by_teacher_id", $this->created_by_teacher_id);
 
         return $stmt->execute();
@@ -68,7 +73,10 @@ class CodingQuestion
         $query = "UPDATE " . $this->table_name . "
                 SET title = :title,
                     description = :description,
-                    difficulty = :difficulty
+                    difficulty = :difficulty,
+                    time_limit = :time_limit,
+                    memory_limit = :memory_limit,
+                    category_tags = :category_tags
                 WHERE id = :id";
 
         $stmt = $this->conn->prepare($query);
@@ -76,6 +84,9 @@ class CodingQuestion
         $stmt->bindParam(":title", $this->title);
         $stmt->bindParam(":description", $this->description);
         $stmt->bindParam(":difficulty", $this->difficulty);
+        $stmt->bindParam(":time_limit", $this->time_limit);
+        $stmt->bindParam(":memory_limit", $this->memory_limit);
+        $stmt->bindParam(":category_tags", $this->category_tags);
         $stmt->bindParam(":id", $this->id);
 
         return $stmt->execute();

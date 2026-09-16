@@ -274,10 +274,24 @@ elseif ($method === 'PUT' && preg_match('/^\/api\/coding-questions\/(\d+)$/', $u
     CodingPracticeController::update($m[1]);
 elseif ($method === 'DELETE' && preg_match('/^\/api\/coding-questions\/(\d+)$/', $uri, $m))
     CodingPracticeController::delete($m[1]);
+
+// Coding Practice - Test Cases
+elseif ($method === 'GET' && preg_match('/^\/api\/coding-questions\/(\d+)\/testcases$/', $uri, $m))
+    CodingPracticeController::getTestCases($m[1]);
+elseif ($method === 'POST' && preg_match('/^\/api\/coding-questions\/(\d+)\/testcases$/', $uri, $m))
+    CodingPracticeController::storeTestCase($m[1]);
+elseif ($method === 'DELETE' && preg_match('/^\/api\/coding-questions\/testcases\/(\d+)$/', $uri, $m))
+    CodingPracticeController::deleteTestCase($m[1]);
+
+// Coding Practice - Execution
 elseif ($method === 'GET' && preg_match('/^\/api\/coding-questions\/(\d+)\/submissions$/', $uri, $m))
     CodingPracticeController::submissions($m[1]);
+elseif ($method === 'GET' && $uri === '/api/coding-questions/my-submissions')
+    CodingPracticeController::mySubmissions();
 elseif ($method === 'POST' && preg_match('/^\/api\/coding-questions\/(\d+)\/submit$/', $uri, $m))
     CodingPracticeController::submit($m[1]);
+elseif ($method === 'POST' && preg_match('/^\/api\/coding-questions\/(\d+)\/run-sample$/', $uri, $m))
+    CodingPracticeController::runSample($m[1]);
 
 // Profile
 elseif ($method === 'PUT' && $uri === '/api/profile/update')

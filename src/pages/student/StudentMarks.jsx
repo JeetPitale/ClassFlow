@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { assignmentAPI, quizAPI } from '@/services/api';
+import { assignmentAPI, quizAPI, codingPracticeAPI } from '@/services/api';
+import { Terminal } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +18,7 @@ export default function StudentMarks() {
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [submissions, setSubmissions] = useState([]);
   const [quizSubmissions, setQuizSubmissions] = useState([]);
+  const [codingSubmissions, setCodingSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -26,12 +28,14 @@ export default function StudentMarks() {
 
   const fetchData = async () => {
     try {
-      const [assignmentsRes, quizzesRes] = await Promise.all([
+      const [assignmentsRes, quizzesRes, codingRes] = await Promise.all([
         assignmentAPI.getMySubmissions(),
-        quizAPI.getMyAttempts()
+        quizAPI.getMyAttempts(),
+        codingPracticeAPI.getMySubmissions()
       ]);
       setSubmissions(assignmentsRes.data.data || []);
       setQuizSubmissions(quizzesRes.data.data || []);
+      setCodingSubmissions(codingRes.data.data || []);
     } catch (error) {
       console.error('Error fetching marks:', error);
       toast({
@@ -132,6 +136,10 @@ export default function StudentMarks() {
             <BookOpen className="w-4 h-4" />
             Quizzes
           </TabsTrigger>
+          <TabsTrigger value="coding" className="gap-2">
+            <Terminal className="w-4 h-4" />
+            Coding
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="assignments" className="space-y-4">
@@ -223,6 +231,38 @@ export default function StudentMarks() {
                         <Eye className="w-4 h-4 mr-1" />
                         Review
                       </Button>
+                    </div>
+                  </div>
+                </div>);
+            })
+          )}
+        </TabsContent>
+        <TabsContent value="coding" className="space-y-4">
+          {codingSubmissions.length === 0 ? (
+            <div className="text-center p-8 text-muted-foreground">No coding challenges attempted yet.</div>
+          ) : (
+            codingSubmissions.map((submission, index) => {
+              return (
+                <div
+                  key={submission.id}
+                  className="card-elevated p-5 animate-slide-up"
+                  style={{ animationDelay: `${index * 50}ms` }}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-foreground">{submission.question_title}</h4>
+                      <span className="text-xs text-muted-foreground">
+                        Submitted {format(new Date(submission.submitted_at), 'MMM d, yyyy')}
+                      </span>
+                    </div>
+                    <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
+                      <div className="flex items-center gap-2 justify-end">
+                        <span className={`text-xl font-bold ${submission.status === 'Passed' ? 'text-success' : 'text-destructive'}`}>
+                          {submission.score}
+                        </span>
+                      </div>
+                      <Badge variant="secondary" className={submission.status === 'Passed' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}>
+                        {submission.status}
+                      </Badge>
                     </div>
                   </div>
                 </div>);

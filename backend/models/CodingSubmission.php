@@ -12,6 +12,11 @@ class CodingSubmission
     public $code;
     public $status;
     public $score;
+    public $language_id = 71;
+    public $runtime;
+    public $memory_used;
+    public $testcases_passed = 0;
+    public $total_testcases = 0;
     public $submitted_at;
 
     public function __construct()
@@ -35,7 +40,11 @@ class CodingSubmission
 
     public function getByStudent($student_id)
     {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE student_id = :student_id";
+        $query = "SELECT s.*, q.title as question_title 
+                  FROM " . $this->table_name . " s
+                  JOIN coding_questions q ON s.question_id = q.id
+                  WHERE s.student_id = :student_id 
+                  ORDER BY s.submitted_at DESC";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":student_id", $student_id);
         $stmt->execute();
@@ -45,9 +54,9 @@ class CodingSubmission
     public function create()
     {
         $query = "INSERT INTO " . $this->table_name . "
-                (question_id, student_id, code, status, score)
+                (question_id, student_id, code, status, score, language_id, runtime, memory_used, testcases_passed, total_testcases)
                 VALUES
-                (:question_id, :student_id, :code, :status, :score)";
+                (:question_id, :student_id, :code, :status, :score, :language_id, :runtime, :memory_used, :testcases_passed, :total_testcases)";
 
         $stmt = $this->conn->prepare($query);
 
@@ -56,6 +65,11 @@ class CodingSubmission
         $stmt->bindParam(":code", $this->code);
         $stmt->bindParam(":status", $this->status);
         $stmt->bindParam(":score", $this->score);
+        $stmt->bindParam(":language_id", $this->language_id);
+        $stmt->bindParam(":runtime", $this->runtime);
+        $stmt->bindParam(":memory_used", $this->memory_used);
+        $stmt->bindParam(":testcases_passed", $this->testcases_passed);
+        $stmt->bindParam(":total_testcases", $this->total_testcases);
 
         return $stmt->execute();
     }
