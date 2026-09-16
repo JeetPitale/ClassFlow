@@ -5,7 +5,6 @@ require_once __DIR__ . '/../models/CodingTestCase.php';
 require_once __DIR__ . '/../utils/Response.php';
 require_once __DIR__ . '/../utils/JWTHandler.php';
 require_once __DIR__ . '/../utils/Judge0.php';
-require_once __DIR__ . '/../utils/JWTHandler.php';
 
 class CodingPracticeController
 {
@@ -213,10 +212,10 @@ class CodingPracticeController
             if ($submission->create()) {
                 Response::success(['message' => 'Code submitted successfully', 'status' => $submission->status, 'score' => $submission->score]);
             } else {
-                Response::error('Failed to submit code: ' . json_encode($submission->getLastError()));
+                Response::error('Failed to submit code');
             }
-        } catch (Exception $e) {
-            Response::error('Database Error: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Response::error('Submit Error: ' . $e->getMessage());
         }
     }
 

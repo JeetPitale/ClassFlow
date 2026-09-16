@@ -170,9 +170,12 @@ export default function StudentCodingPractice() {
           variant: status === 'Passed' ? 'default' : 'destructive'
         });
         setIsSubmitOpen(false);
+      } else {
+        toast({ title: 'Error', description: response.data.message || 'Submission failed.', variant: 'destructive' });
       }
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to submit code.', variant: 'destructive' });
+      const msg = error.response?.data?.message || 'Failed to submit code.';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
