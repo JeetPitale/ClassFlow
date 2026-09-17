@@ -58,7 +58,7 @@ if (!class_exists('Database')) {
 
                 if (is_int($val)) {
                     $type = 'integer';
-                    $valPayload = (int)$val;
+                    $valPayload = (string)$val;
                 } elseif (is_float($val)) {
                     $type = 'float';
                     $valPayload = (float)$val;
