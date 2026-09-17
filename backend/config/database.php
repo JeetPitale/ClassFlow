@@ -54,22 +54,27 @@ if (!class_exists('Database')) {
 
             foreach ($params as $name => $val) {
                 $type = 'text';
+                $valPayload = $val !== null ? (string)$val : null;
+
                 if (is_int($val)) {
                     $type = 'integer';
+                    $valPayload = (int)$val;
                 } elseif (is_float($val)) {
                     $type = 'float';
+                    $valPayload = (float)$val;
                 } elseif (is_null($val)) {
                     $type = 'null';
+                    $valPayload = null;
                 }
 
                 $cleanName = ltrim($name, ':');
 
                 if (is_numeric($name)) {
-                    $args[] = ['type' => $type, 'value' => (string)$val];
+                    $args[] = ['type' => $type, 'value' => $valPayload];
                 } else {
                     $namedArgs[] = [
                         'name' => $cleanName,
-                        'value' => ['type' => $type, 'value' => $val !== null ? (string)$val : null]
+                        'value' => ['type' => $type, 'value' => $valPayload]
                     ];
                 }
             }

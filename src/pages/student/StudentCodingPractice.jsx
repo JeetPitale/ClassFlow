@@ -15,16 +15,54 @@ import { useToast } from '@/hooks/use-toast';
 import { codingPracticeAPI } from '@/services/api';
 import { useTheme } from 'next-themes';
 
+const LANGUAGE_TEMPLATES = {
+  71: `# Python 3
+def solution():
+    # Write your solution here
+    pass
+
+if __name__ == '__main__':
+    solution()
+`,
+  63: `// JavaScript (Node.js)
+function solution() {
+    // Write your solution here
+}
+
+solution();
+`,
+  62: `// Java
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        // Write your solution here
+        Scanner scanner = new Scanner(System.in);
+    }
+}
+`,
+  54: `// C++
+#include <iostream>
+using namespace std;
+
+int main() {
+    // Write your solution here
+    return 0;
+}
+`
+};
+
 export default function StudentCodingPractice() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Submit Dialog State
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
-  const [codeContent, setCodeContent] = useState('');
+  const [codeContent, setCodeContent] = useState(LANGUAGE_TEMPLATES[71]);
   const [language, setLanguage] = useState(71); // Default Python in Judge0
-  
+  const [codesByLanguage, setCodesByLanguage] = useState({ ...LANGUAGE_TEMPLATES });
+
   const [submitting, setSubmitting] = useState(false);
   const [runningSample, setRunningSample] = useState(false);
   const [sampleResults, setSampleResults] = useState(null);
@@ -34,23 +72,105 @@ export default function StudentCodingPractice() {
   const timerRef = useRef(null);
   const autoSubmittedRef = useRef(false);
 
+  // Refs for callbacks & listeners
+  const codeContentRef = useRef(codeContent);
+  const languageRef = useRef(language);
+  const selectedQuestionRef = useRef(selectedQuestion);
+  const isSubmitOpenRef = useRef(isSubmitOpen);
+  const submittingRef = useRef(submitting);
+
   const { toast } = useToast();
   const { theme } = useTheme();
+
+  useEffect(() => {
+    codeContentRef.current = codeContent;
+  }, [codeContent]);
+
+  useEffect(() => {
+    languageRef.current = language;
+  }, [language]);
+
+  useEffect(() => {
+    selectedQuestionRef.current = selectedQuestion;
+  }, [selectedQuestion]);
+
+  useEffect(() => {
+    isSubmitOpenRef.current = isSubmitOpen;
+  }, [isSubmitOpen]);
+
+  useEffect(() => {
+    submittingRef.current = submitting;
+  }, [submitting]);
 
   useEffect(() => {
     fetchQuestions();
   }, []);
 
-  // Tab switch detection - auto-submit
+  const handleSubmitCode = useCallback(async (isAuto = false) => {
+    const currentCode = codeContentRef.current;
+    const currentQuestion = selectedQuestionRef.current;
+    const currentLang = languageRef.current;
+
+    if (!currentQuestion) return;
+
+    if (!currentCode || !currentCode.trim()) {
+      if (!isAuto) {
+        toast({ title: 'Error', description: 'Please write some code before submitting.', variant: 'destructive' });
+      }
+      return;
+    }
+
+    if (submittingRef.current) return;
+
+    clearInterval(timerRef.current);
+    setSubmitting(true);
+    submittingRef.current = true;
+
+    try {
+      const response = await codingPracticeAPI.submit(currentQuestion.id, {
+        code: currentCode,
+        language_id: currentLang
+      });
+
+      if (response.data.success) {
+        const { status, score } = response.data.data;
+        toast({
+          title: isAuto ? 'Auto-Submitted on Tab Switch' : 'Code Evaluated',
+          description: `Status: ${status} | Score: ${score}`,
+          variant: status === 'Passed' ? 'default' : 'destructive'
+        });
+        setIsSubmitOpen(false);
+      } else {
+        toast({
+          title: 'Submission Error',
+          description: response.data.message || 'Submission failed.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      const msg = error.response?.data?.message || error.message || 'Failed to submit code.';
+      toast({
+        title: 'Submission Error',
+        description: msg,
+        variant: 'destructive'
+      });
+    } finally {
+      setSubmitting(false);
+      submittingRef.current = false;
+    }
+  }, [toast]);
+
+  // Tab switch detection - auto-submit immediately
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden && isSubmitOpen) {
-        toast({ 
-          title: 'Warning', 
-          description: 'Tab switch detected! Auto-submitting your code.', 
-          variant: 'destructive' 
+      if (document.hidden && isSubmitOpenRef.current && !autoSubmittedRef.current && !submittingRef.current) {
+        autoSubmittedRef.current = true;
+        toast({
+          title: '⚠️ Tab Switch Detected!',
+          description: 'You switched tabs. Your code is being automatically submitted.',
+          variant: 'destructive'
         });
-        handleSubmitCode();
+        handleSubmitCode(true);
       }
     };
 
@@ -58,7 +178,7 @@ export default function StudentCodingPractice() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [isSubmitOpen, codeContent, selectedQuestion]);
+  }, [handleSubmitCode, toast]);
 
   // Timer countdown effect
   useEffect(() => {
@@ -68,15 +188,14 @@ export default function StudentCodingPractice() {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timerRef.current);
-          // Auto-submit when timer expires
-          if (!autoSubmittedRef.current) {
+          if (!autoSubmittedRef.current && !submittingRef.current) {
             autoSubmittedRef.current = true;
-            toast({ 
-              title: '⏰ Time\'s Up!', 
+            toast({
+              title: "⏰ Time's Up!",
               description: 'Your code has been auto-submitted.',
               variant: 'destructive'
             });
-            handleSubmitCode();
+            handleSubmitCode(true);
           }
           return 0;
         }
@@ -85,7 +204,7 @@ export default function StudentCodingPractice() {
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-  }, [isSubmitOpen, timeLeft > 0]);
+  }, [isSubmitOpen, timeLeft > 0, handleSubmitCode, toast]);
 
   // Cleanup timer when dialog closes
   useEffect(() => {
@@ -123,17 +242,45 @@ export default function StudentCodingPractice() {
 
   const handleOpenSubmit = (question) => {
     setSelectedQuestion(question);
-    setCodeContent('# Write your python code here...\n\ndef solution():\n    pass\n');
+    const initialTemplates = { ...LANGUAGE_TEMPLATES };
+    setCodesByLanguage(initialTemplates);
+    setLanguage(71);
+    setCodeContent(initialTemplates[71]);
+    codeContentRef.current = initialTemplates[71];
+    languageRef.current = 71;
+    selectedQuestionRef.current = question;
     setSampleResults(null);
     autoSubmittedRef.current = false;
-    // Start timer based on the question's time_limit (stored in seconds)
-    const timeLimitSeconds = Math.max(parseInt(question.time_limit) || 120, 60); // minimum 60s
+    const timeLimitSeconds = Math.max(parseInt(question.time_limit) || 120, 60);
     setTimeLeft(timeLimitSeconds);
     setIsSubmitOpen(true);
   };
 
+  const handleCodeChange = (newVal) => {
+    const updated = newVal ?? '';
+    setCodeContent(updated);
+    codeContentRef.current = updated;
+    setCodesByLanguage(prev => ({
+      ...prev,
+      [languageRef.current]: updated
+    }));
+  };
+
+  const handleLanguageChange = (newLangId) => {
+    const langId = parseInt(newLangId);
+    setLanguage(langId);
+    languageRef.current = langId;
+    const nextCode = codesByLanguage[langId] !== undefined ? codesByLanguage[langId] : (LANGUAGE_TEMPLATES[langId] || '');
+    setCodeContent(nextCode);
+    codeContentRef.current = nextCode;
+  };
+
   const handleRunSample = async () => {
-    if (!codeContent.trim()) {
+    const currentCode = codeContentRef.current;
+    const currentQuestion = selectedQuestionRef.current;
+    const currentLang = languageRef.current;
+
+    if (!currentCode || !currentCode.trim()) {
       toast({ title: 'Error', description: 'Code cannot be empty.', variant: 'destructive' });
       return;
     }
@@ -141,7 +288,10 @@ export default function StudentCodingPractice() {
     setRunningSample(true);
     setSampleResults(null);
     try {
-      const response = await codingPracticeAPI.runSample(selectedQuestion.id, { code: codeContent, language_id: language });
+      const response = await codingPracticeAPI.runSample(currentQuestion.id, {
+        code: currentCode,
+        language_id: currentLang
+      });
       if (response.data.success) {
         setSampleResults(response.data.data.results);
       }
@@ -152,35 +302,6 @@ export default function StudentCodingPractice() {
     }
   };
 
-  const handleSubmitCode = async () => {
-    if (!codeContent.trim()) {
-      toast({ title: 'Error', description: 'Please write some code before submitting.', variant: 'destructive' });
-      return;
-    }
-
-    clearInterval(timerRef.current);
-    setSubmitting(true);
-    try {
-      const response = await codingPracticeAPI.submit(selectedQuestion.id, { code: codeContent, language_id: language });
-      if (response.data.success) {
-        const { status, score } = response.data.data;
-        toast({ 
-          title: 'Code Evaluated', 
-          description: `Status: ${status} | Score: ${score}`,
-          variant: status === 'Passed' ? 'default' : 'destructive'
-        });
-        setIsSubmitOpen(false);
-      } else {
-        toast({ title: 'Error', description: response.data.message || 'Submission failed.', variant: 'destructive' });
-      }
-    } catch (error) {
-      const msg = error.response?.data?.message || 'Failed to submit code.';
-      toast({ title: 'Error', description: msg, variant: 'destructive' });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const getLanguageString = (id) => {
     const map = { 71: 'python', 63: 'javascript', 62: 'java', 54: 'cpp' };
     return map[id] || 'python';
@@ -188,9 +309,9 @@ export default function StudentCodingPractice() {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Coding Assessments" 
-        description="Enhance your programming skills with real-time feedback." 
+      <PageHeader
+        title="Coding Assessments"
+        description="Enhance your programming skills with real-time feedback."
       />
 
       {loading ? (
@@ -216,7 +337,7 @@ export default function StudentCodingPractice() {
                 </CardDescription>
                 <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
                   <span>⏱ {question.time_limit}s</span>
-                  <span>💾 {Math.round(question.memory_limit/1024)}MB</span>
+                  <span>💾 {Math.round(question.memory_limit / 1024)}MB</span>
                 </div>
               </CardHeader>
               <CardContent>
@@ -236,7 +357,7 @@ export default function StudentCodingPractice() {
           <DialogHeader className="p-4 border-b flex-shrink-0">
             <div className="flex items-center justify-between pr-8">
               <DialogTitle className="text-xl flex items-center gap-2">
-                <Code className="h-5 w-5 text-primary"/> {selectedQuestion?.title}
+                <Code className="h-5 w-5 text-primary" /> {selectedQuestion?.title}
               </DialogTitle>
               <div className="flex items-center gap-3">
                 {/* Countdown Timer */}
@@ -244,11 +365,11 @@ export default function StudentCodingPractice() {
                   <Timer className="h-4 w-4" />
                   {formatTime(timeLeft)}
                 </div>
-                
-                <select 
+
+                <select
                   className="text-sm bg-background border rounded px-2 py-1"
                   value={language}
-                  onChange={(e) => setLanguage(parseInt(e.target.value))}
+                  onChange={(e) => handleLanguageChange(parseInt(e.target.value))}
                 >
                   <option value={71}>Python</option>
                   <option value={63}>JavaScript</option>
@@ -256,31 +377,31 @@ export default function StudentCodingPractice() {
                   <option value={54}>C++</option>
                 </select>
                 <Button variant="outline" onClick={handleRunSample} disabled={runningSample || submitting}>
-                  {runningSample ? <Loader2 className="h-4 w-4 animate-spin mr-2"/> : <Play className="h-4 w-4 mr-2"/>}
+                  {runningSample ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}
                   Run Code
                 </Button>
-                <Button onClick={handleSubmitCode} disabled={submitting || runningSample}>
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2"/> : null}
+                <Button onClick={() => handleSubmitCode(false)} disabled={submitting || runningSample}>
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   Submit
                 </Button>
               </div>
             </div>
           </DialogHeader>
-          
+
           <div className="flex-1 flex overflow-hidden">
             {/* Left Panel: Description */}
             <div className="w-1/3 border-r p-6 overflow-y-auto bg-muted/30">
               <div className="prose prose-sm dark:prose-invert max-w-none">
                 <h3>Problem Description</h3>
                 <div className="whitespace-pre-wrap">{selectedQuestion?.description}</div>
-                
+
                 <h4 className="mt-6">Constraints</h4>
                 <ul>
                   <li>Time Limit: {selectedQuestion?.time_limit}s</li>
-                  <li>Memory Limit: {Math.round(selectedQuestion?.memory_limit/1024)}MB</li>
+                  <li>Memory Limit: {Math.round(selectedQuestion?.memory_limit / 1024)}MB</li>
                 </ul>
               </div>
-              
+
               {/* Sample Execution Results */}
               {sampleResults && (
                 <div className="mt-8 border-t pt-4">
@@ -289,7 +410,7 @@ export default function StudentCodingPractice() {
                     {sampleResults.map((res, idx) => (
                       <div key={idx} className={`p-3 rounded-md border ${res.passed ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
                         <div className="flex items-center gap-2 mb-2 font-medium">
-                          {res.passed ? <CheckCircle2 className="h-4 w-4 text-green-500"/> : <XCircle className="h-4 w-4 text-red-500"/>}
+                          {res.passed ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />}
                           Test Case {idx + 1}
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-xs font-mono">
@@ -308,7 +429,7 @@ export default function StudentCodingPractice() {
                 </div>
               )}
             </div>
-            
+
             {/* Right Panel: Editor */}
             <div className="w-2/3 h-full">
               <Editor
@@ -316,7 +437,7 @@ export default function StudentCodingPractice() {
                 language={getLanguageString(language)}
                 theme={theme === 'dark' ? 'vs-dark' : 'light'}
                 value={codeContent}
-                onChange={setCodeContent}
+                onChange={handleCodeChange}
                 options={{
                   minimap: { enabled: false },
                   fontSize: 14,
