@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../models/Material.php';
 require_once __DIR__ . '/../utils/Response.php';
 require_once __DIR__ . '/../utils/JWTHandler.php';
+require_once __DIR__ . '/../utils/FileStorage.php';
 
 class MaterialController
 {
@@ -31,7 +32,6 @@ class MaterialController
         }
 
         Response::success($materials);
-        // Deployment Trigger: v2 - Force update
     }
 
     public static function store()
@@ -42,13 +42,6 @@ class MaterialController
 
         $decoded = JWTHandler::validateToken($token);
 
-        // Debug logging
-        if (!$decoded) {
-            error_log("Token validation failed. Token: " . substr($token, 0, 10) . "...");
-        } else {
-            error_log("User Role: " . $decoded['role']);
-        }
-
         if (!$decoded || ($decoded['role'] !== 'teacher' && $decoded['role'] !== 'admin')) {
             Response::forbidden('Only teachers can upload materials (Role: ' . ($decoded['role'] ?? 'none') . ')');
         }
@@ -56,7 +49,6 @@ class MaterialController
         // Handle both JSON and Multipart/Form-Data
         $data = null;
         $fileUrl = '';
-        $filePath = '';
         $fileType = 'pdf';
 
         try {
@@ -65,58 +57,9 @@ class MaterialController
                 $data = (object) $_POST;
 
                 if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-                    // Define absolute path to uploads directory at the project root level (sibling of controllers, etc)
-                    // __DIR__ is .../backend/controllers
-                    // we want .../backend/uploads
-                    // Use dirname(__DIR__) to get the parent directory (backend root)
-                    $uploadDir = dirname(__DIR__) . '/uploads/';
-
-                    // Create directory if it doesn't exist
-                    if (!is_dir($uploadDir)) {
-                        if (!mkdir($uploadDir, 0777, true)) {
-                            error_log("Failed to create upload directory: " . $uploadDir);
-                        }
-                    }
-
-                    // Try to ensure it is writable
-                    @chmod($uploadDir, 0777);
-
-                    if (!is_writable($uploadDir)) {
-                        error_log("Upload directory is not writable: " . $uploadDir);
-                        // We continue to see if move_uploaded_file works anyway, sometimes is_writable is false positive on some setups
-                    }
-
-                    $fileName = time() . '_' . basename($_FILES['file']['name']);
-                    // sanitize filename
-                    $fileName = preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName);
-
-                    $targetPath = $uploadDir . $fileName;
-
-                    if (!move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
-                        // Detailed error for debugging
-                        $error = error_get_last();
-                        throw new Exception("Failed to move uploaded file to: " . $targetPath . " (Error: " . ($error['message'] ?? 'Unknown') . ")");
-                    }
-
-                    $fileUrl = '/uploads/' . $fileName;
-                    $filePath = $targetPath;
-
-                    // Detect file type
-                    $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-                    $typeMap = [
-                        'pdf' => 'pdf',
-                        'doc' => 'doc',
-                        'docx' => 'doc',
-                        'ppt' => 'slides',
-                        'pptx' => 'slides',
-                        'jpg' => 'image',
-                        'jpeg' => 'image',
-                        'png' => 'image',
-                        'mp3' => 'audio',
-                        'wav' => 'audio'
-                    ];
-                    $fileType = $typeMap[$ext] ?? 'pdf';
-
+                    $uploadResult = FileStorage::saveUploadedFile($_FILES['file'], 'materials');
+                    $fileUrl = $uploadResult['file_url'];
+                    $fileType = $uploadResult['file_type'];
                 } elseif (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
                     // Map error code to message
                     $errorCode = $_FILES['file']['error'];
@@ -149,23 +92,17 @@ class MaterialController
                 if (!$data)
                     $data = (object) [];
 
-                $fileUrl = $data->file_path ?? '';
-                $filePath = $data->file_path ?? '';
+                $fileUrl = $data->file_path ?? ($data->file_url ?? '');
                 $fileType = $data->file_type ?? 'pdf';
             }
 
-            // --- MOVED INSIDE TRY-CATCH ---
             if (!isset($data->title) || !isset($data->semester)) {
-                // Manually throw to be caught by catch block, or just return Response::validationError (which exits)
-                // Response::validationError calls exit(), so it is fine.
                 Response::validationError(['title' => 'Title required', 'semester' => 'Semester required']);
             }
 
             $material = new Material();
             $material->title = $data->title;
-            // Handle null description safely
             $material->description = $data->description ?? '';
-            // $material->file_path = $filePath; // Not used in DB
             $material->file_url = $fileUrl;
             $material->file_type = $fileType;
             $material->uploaded_by_teacher_id = $decoded['user_id'];
@@ -178,7 +115,6 @@ class MaterialController
                     NotificationHelper::createMaterialNotification($material->findById($material->id));
                 } catch (\Throwable $nErr) {
                     error_log("Notification Error: " . $nErr->getMessage());
-                    // Don't fail the upload if notification fails
                 }
 
                 Response::success($material->findById($material->id), 'Material uploaded successfully', 201);
@@ -188,14 +124,10 @@ class MaterialController
 
         } catch (\Throwable $e) {
             error_log("Material Upload Critical Error: " . $e->getMessage());
-            error_log("Trace: " . $e->getTraceAsString());
-
-            // Force 500 status code
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => "Server Error: " . $e->getMessage(),
-                // 'trace' => $e->getTraceAsString() // Keep trace for debugging this specific issue
+                'message' => "Server Error: " . $e->getMessage()
             ]);
             exit();
         }
@@ -226,40 +158,18 @@ class MaterialController
 
         // Handle File Update
         $fileUrl = $existing['file_url'];
-        $filePath = realpath(__DIR__ . '/../') . $fileUrl; // Reconstruct path
         $fileType = $existing['file_type'];
 
         if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = dirname(__DIR__) . '/uploads/';
-
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-            @chmod($uploadDir, 0777);
-
-            $fileName = time() . '_' . basename($_FILES['file']['name']);
-            $fileName = preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName);
-            $targetPath = $uploadDir . $fileName;
-
-            if (move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
-                // Remove old file
-                if (file_exists($filePath)) {
-                    unlink($filePath);
-                }
-                $filePath = $targetPath;
-                $fileUrl = '/uploads/' . $fileName;
-
-                // Update type
-                $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-                $typeMap = ['pdf' => 'pdf', 'doc' => 'doc', 'docx' => 'doc', 'ppt' => 'slides', 'pptx' => 'slides', 'jpg' => 'image', 'png' => 'image'];
-                $fileType = $typeMap[$ext] ?? 'pdf';
-            }
+            FileStorage::deleteFile($existing['file_url']);
+            $uploadResult = FileStorage::saveUploadedFile($_FILES['file'], 'materials');
+            $fileUrl = $uploadResult['file_url'];
+            $fileType = $uploadResult['file_type'];
         }
 
         $material->id = $id;
         $material->title = $_POST['title'] ?? $existing['title'];
         $material->description = $_POST['description'] ?? $existing['description'];
-        // $material->file_path = $filePath; // Not used in DB
         $material->file_url = $fileUrl;
         $material->file_type = $fileType;
         $material->semester = $_POST['semester'] ?? $existing['semester'];
@@ -290,6 +200,8 @@ class MaterialController
             Response::forbidden('You can only delete materials you uploaded');
         }
 
+        FileStorage::deleteFile($existing['file_url']);
+
         $material->id = $id;
         if ($material->delete()) {
             Response::success(null, 'Material deleted successfully');
@@ -306,10 +218,6 @@ class MaterialController
         $decoded = JWTHandler::validateToken($token);
 
         if (!$decoded) {
-            // For download links, sometimes token is passed in query param if headers aren't possible
-            // But here we rely on the frontend ensuring the user is logged in. 
-            // If opening in new tab, headers might be tricky. 
-            // Let's check query param 'token' as fallback
             $token = $_GET['token'] ?? '';
             $decoded = JWTHandler::validateToken($token);
 
@@ -328,38 +236,11 @@ class MaterialController
             die('Material not found');
         }
 
-        // 3. Verify File Exists
-        // $material['file_path'] might be missing from DB, reconstruct it
-        $filePath = realpath(__DIR__ . '/../') . $material['file_url'];
-
-        if (!file_exists($filePath)) {
-            // Try relative if absolute fails (backward compatibility)
-            $relativeConfig = __DIR__ . '/../' . $filePath;
-            if (file_exists($relativeConfig)) {
-                $filePath = $relativeConfig;
-            } else {
-                http_response_code(404);
-                die('File not found on server');
-            }
-        }
-
-        // 4. Force Download/View Headers
-        $fileName = basename($filePath);
-        // Clean filename for header
-        $downloadName = preg_replace('/[^a-zA-Z0-9.\-_]/', '_', $material['title']) . '.' . pathinfo($filePath, PATHINFO_EXTENSION);
-
+        // 3. Force Download/View Headers
+        $ext = pathinfo($material['file_url'], PATHINFO_EXTENSION) ?: 'pdf';
+        $downloadName = preg_replace('/[^a-zA-Z0-9.\-_]/', '_', $material['title']) . '.' . $ext;
         $disposition = (isset($_GET['inline']) && $_GET['inline'] === 'true') ? 'inline' : 'attachment';
 
-        header('Content-Description: File Transfer');
-        header('Content-Type: ' . (mime_content_type($filePath) ?: 'application/octet-stream'));
-        header('Content-Disposition: ' . $disposition . '; filename="' . $downloadName . '"');
-        header('Expires: 0');
-        header('Cache-Control: must-revalidate');
-        header('Pragma: public');
-        header('Content-Length: ' . filesize($filePath));
-
-        // 5. Output File
-        readfile($filePath);
-        exit;
+        FileStorage::serveFile($material['file_url'], $disposition, $downloadName);
     }
 }

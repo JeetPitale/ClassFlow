@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../models/Assignment.php';
 require_once __DIR__ . '/../utils/Response.php';
 require_once __DIR__ . '/../utils/JWTHandler.php';
+require_once __DIR__ . '/../utils/FileStorage.php';
 
 class AssignmentController
 {
@@ -59,11 +60,7 @@ class AssignmentController
             Response::forbidden('Only teachers can create assignments');
         }
 
-        // Handle multipart/form-data (cannot use file_get_contents for POST data)
-        // DEBUG
-        error_log("POST: " . print_r($_POST, true));
-        error_log("FILES: " . print_r($_FILES, true));
-
+        // Handle POST form data
         $title = $_POST['title'] ?? null;
         $due_date = $_POST['due_date'] ?? null;
 
@@ -83,20 +80,11 @@ class AssignmentController
 
         // Handle File Upload
         if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../uploads/assignments/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-
-            $fileExtension = pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION);
-            $fileName = uniqid() . '_' . time() . '.' . $fileExtension;
-            $targetPath = $uploadDir . $fileName;
-
-            if (move_uploaded_file($_FILES['attachment']['tmp_name'], $targetPath)) {
-                // Store relative path or full URL depending on your setup. 
-                // Here preserving relative path structure for serving.
-                // Assuming your server serves 'uploads' directory at root
-                $assignment->attachment_path = '/uploads/assignments/' . $fileName;
+            try {
+                $uploadResult = FileStorage::saveUploadedFile($_FILES['attachment'], 'assignments');
+                $assignment->attachment_path = $uploadResult['file_url'];
+            } catch (Exception $e) {
+                error_log("Failed to save assignment attachment: " . $e->getMessage());
             }
         }
 
@@ -135,16 +123,14 @@ class AssignmentController
 
         // Handle File Upload if provided
         if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../uploads/assignments/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-
-            $fileName = $id . '_' . time() . '.' . pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION);
-            $targetPath = $uploadDir . $fileName;
-
-            if (move_uploaded_file($_FILES['attachment']['tmp_name'], $targetPath)) {
-                $assignment->attachment_path = 'uploads/assignments/' . $fileName;
+            try {
+                if (!empty($existing['attachment_path'])) {
+                    FileStorage::deleteFile($existing['attachment_path']);
+                }
+                $uploadResult = FileStorage::saveUploadedFile($_FILES['attachment'], 'assignments');
+                $assignment->attachment_path = $uploadResult['file_url'];
+            } catch (Exception $e) {
+                error_log("Failed to update assignment attachment: " . $e->getMessage());
             }
         }
 
@@ -158,8 +144,14 @@ class AssignmentController
     public static function destroy($id)
     {
         $assignment = new Assignment();
-        if (!$assignment->findById($id))
+        $existing = $assignment->findById($id);
+        if (!$existing)
             Response::notFound('Assignment not found');
+            
+        if (!empty($existing['attachment_path'])) {
+            FileStorage::deleteFile($existing['attachment_path']);
+        }
+
         $assignment->id = $id;
         if ($assignment->delete()) {
             Response::success(null, 'Assignment deleted successfully');
@@ -184,9 +176,23 @@ class AssignmentController
             Response::forbidden('Only students can submit assignments');
         }
 
-        $data = json_decode(file_get_contents("php://input"));
+        $filePath = null;
+        if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+            $uploadResult = FileStorage::saveUploadedFile($_FILES['file'], 'submissions');
+            $filePath = $uploadResult['file_url'];
+        }
+
+        $submissionText = $_POST['submission_text'] ?? '';
+        if (empty($submissionText) && empty($filePath)) {
+            $input = json_decode(file_get_contents("php://input"));
+            if ($input) {
+                $submissionText = $input->submission_text ?? '';
+                $filePath = $input->file_path ?? null;
+            }
+        }
+
         $assignment = new Assignment();
-        if ($assignment->submitAssignment($id, $decoded['user_id'], $data->submission_text ?? '', $data->file_path ?? null)) {
+        if ($assignment->submitAssignment($id, $decoded['user_id'], $submissionText, $filePath)) {
             Response::success(null, 'Assignment submitted successfully', 201);
         } else {
             Response::error('Failed to submit assignment');
@@ -274,7 +280,6 @@ class AssignmentController
             if ($assignment->gradeSubmission($submission['id'], $data->marks ?? 0, $data->feedback ?? '')) {
                 // Trigger notification
                 require_once __DIR__ . '/../utils/NotificationHelper.php';
-                // We need title
                 $asgn = $assignment->findById($assignment_id);
                 if ($asgn) {
                     NotificationHelper::createAssignmentGradeNotification(

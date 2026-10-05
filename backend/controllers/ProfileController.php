@@ -141,51 +141,7 @@ class ProfileController
 
     private static function uploadBase64Image($base64String, $userId, $role)
     {
-        // uploads directory
-        $targetDir = __DIR__ . '/../../uploads/profiles/';
-        if (!file_exists($targetDir)) {
-            mkdir($targetDir, 0777, true);
-        }
-
-        // Extract image data
-        $image_parts = explode(";base64,", $base64String);
-        $image_type_aux = explode("image/", $image_parts[0]);
-        $image_type = $image_type_aux[1];
-        $image_base64 = base64_decode($image_parts[1]);
-
-        // Generate filename
-        $fileName = $role . '_' . $userId . '_' . time() . '.' . $image_type;
-        $file = $targetDir . $fileName;
-
-        file_put_contents($file, $image_base64);
-
-        // Return relative URL for storage
-        // Assuming uploads is visible to public or served via PHP
-        // Actually, simple PHP serving needs a way to access it. 
-        // For 'php -S', 'uploads' folder in root is accessible if router script allows or direct file access.
-        // My root is 'backend/'. 'uploads' is '../uploads'?
-        // The server is at 'backend/index.php'.
-        // If I serve from 'backend/', the uploads folder is typically outside 'backend' in my structure? 
-        // Filesystem: `/Users/jeetpitale/ClassFlow/crest-edu-main/backend/controllers`
-        // My code puts it in `../../uploads/profiles/`. That is `crest-edu-main/uploads/profiles/`.
-        // If serving from `crest-edu-main/backend`, `../uploads` is not web-accessible directly if DocumentRoot is `backend`.
-        // But the user runs `php -S localhost:8000 -t backend/`.
-        // So `http://localhost:8000/` maps to `backend/`.
-        // `backend` folder contains `index.php`.
-        // `uploads` is OUTSIDE `backend`.
-        // So `http://localhost:8000/../uploads` is unreachable.
-        // I should move `uploads` INSIDE `backend/uploads` OR serve from root.
-
-        // I'll put uploads in `backend/uploads/profiles/`.
-        $targetDir = __DIR__ . '/../uploads/profiles/';
-        if (!file_exists($targetDir)) {
-            mkdir($targetDir, 0777, true);
-        }
-        $file = $targetDir . $fileName;
-        file_put_contents($file, $image_base64);
-
-        return '/uploads/profiles/' . $fileName;
-        // NOTE: Frontend connecting to `http://localhost:8000/uploads/profiles/...` will works if `index.php` handles static files or `php -S` does.
-        // `php -S` handles static files if they exist.
+        require_once __DIR__ . '/../utils/FileStorage.php';
+        return FileStorage::saveBase64($base64String, 'profiles', $role . '_' . $userId);
     }
 }

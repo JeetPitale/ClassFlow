@@ -73,6 +73,7 @@ require_once __DIR__ . '/controllers/ProfileController.php';
 require_once __DIR__ . '/controllers/CodingPracticeController.php';
 require_once __DIR__ . '/utils/Response.php';
 
+require_once __DIR__ . '/utils/FileStorage.php';
 require_once __DIR__ . '/utils/RateLimiter.php';
 // Enable Rate Limiting to prevent crashes
 RateLimiter::handle();
@@ -89,6 +90,13 @@ if (php_sapi_name() === 'cli-server') {
 $method = $_SERVER['REQUEST_METHOD'];
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = str_replace('/backend', '', str_replace('/index.php', '', $uri));
+
+// Uploads & Static File Serving (Vercel serverless & local)
+if (strpos($uri, '/uploads/') === 0 || strpos($uri, '/api/uploads/') === 0) {
+    $cleanPath = '/' . ltrim(str_replace('/api/uploads/', '/uploads/', $uri), '/');
+    FileStorage::serveFile($cleanPath, 'inline');
+    exit();
+}
 
 // Auth
 if ($method === 'POST' && $uri === '/api/auth/login')

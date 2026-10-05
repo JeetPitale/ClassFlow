@@ -10,11 +10,15 @@
   },
   "rewrites": [
     {
+      "source": "/uploads/(.*)",
+      "destination": "/api/index.php"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index.php"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/((?!api/|uploads/).*)",
       "destination": "/index.html"
     }
   ]
